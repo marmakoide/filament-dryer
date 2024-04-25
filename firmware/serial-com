@@ -1,0 +1,3 @@
+#!/bin/sh
+
+picocom -b 9600 --omap=crlf -r -l /dev/ttyUSB0
