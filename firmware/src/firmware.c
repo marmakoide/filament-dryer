@@ -11,7 +11,7 @@
 
 
 extern const __flash uint8_t
-framebuffer_data[512];
+framebuffer_data[];
 
 
 int
