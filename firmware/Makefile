@@ -4,35 +4,37 @@ MCU=atmega328p
 F_CPU=16000000UL
 TARGET=firmware.hex
 
-INCLUDES=$(AVRKIT_PATH)/include
+SRC=./src
+INCLUDES=./include
+AVRKIT_INCLUDES=$(AVRKIT_PATH)/include
 
 
 .PHONY: clean upload
 
 all: $(TARGET)
 
-bitmap.c: ./assets/bitmap-small.png ./bitmap-to-framebuffer
+$(SRC)/bitmap.c: ./assets/bitmap-small.png ./bitmap-to-framebuffer
 	python3 ./bitmap-to-framebuffer $< > $@
 
-bitmap.o: bitmap.c
+$(SRC)/bitmap.o: $(SRC)/bitmap.c
 
-twi.o: twi.c twi.h
+$(SRC)/twi.o: $(SRC)/twi.c $(INCLUDES)/twi.h
 
-ssd1306.o: ssd1306.c ssd1306.h twi.h
+$(SRC)/ssd1306.o: $(SRC)/ssd1306.c $(INCLUDES)/ssd1306.h $(INCLUDES)/twi.h
 
-firmware.o: firmware.c config.h
+$(SRC)/firmware.o: $(SRC)/firmware.c $(INCLUDES)/config.h
 
 .c.o:
-	avr-gcc -I$(INCLUDES) -Os -DF_CPU=$(F_CPU) -D__AVRKIT_$(MCU)__ -mmcu=$(MCU) -c -o $@ $<
+	avr-gcc -I$(AVRKIT_INCLUDES) -I$(INCLUDES) -Os -DF_CPU=$(F_CPU) -D__AVRKIT_$(MCU)__ -mmcu=$(MCU) -c -o $@ $<
 
-firmware.elf: firmware.o ssd1306.o twi.o bitmap.o
+firmware.elf: $(SRC)/firmware.o $(SRC)/ssd1306.o $(SRC)/twi.o $(SRC)/bitmap.o
 	avr-gcc -mmcu=$(MCU) $^ -o $@
 
 %.hex: %.elf
 	avr-objcopy -O ihex -R .eeprom $< $@
 
 clean:
-	rm -f *.o *.elf bitmap.c $(TARGET)
+	rm -f $(SRC)/*.o *.elf $(SRC)/bitmap.c $(TARGET)
 
 upload: $(TARGET)
 	avrdude -F -V -c arduino -p $(MCU) -P $(USB_PORT) -b 115200 -U flash:w:$<
