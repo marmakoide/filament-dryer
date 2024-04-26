@@ -71,6 +71,29 @@ SSD1306_framebuffer_size =
 #endif
 
 
+static const uint16_t
+SSD1306_framebuffer_width =
+#if SSD1306_DISPLAY_SIZE == SSD1306_DISPLAY_SIZE__128x32
+128;
+#elif SSD1306_DISPLAY_SIZE == SSD1306_DISPLAY_SIZE__128x64
+128;
+#else
+0;
+#error "SSD1306_DISPLAY_SIZE not defined"
+#endif
+
+static const uint16_t
+SSD1306_framebuffer_height =
+#if SSD1306_DISPLAY_SIZE == SSD1306_DISPLAY_SIZE__128x32
+32;
+#elif SSD1306_DISPLAY_SIZE == SSD1306_DISPLAY_SIZE__128x64
+64;
+#else
+0;
+#error "SSD1306_DISPLAY_SIZE not defined"
+#endif
+
+
 /*
  *  init sequence for 128x32 display
  */
@@ -181,7 +204,7 @@ ssd1306_send_command_stream(const uint8_t* data, uint16_t data_size) {
 	if (TW_STATUS != TW_MT_SLA_ACK)
 		return 0;
 
-	// Send SSD1306 startup sequence
+	// Send commands
 	twi_send_data(SSD1306_COMMAND_STREAM);
 	if (TW_STATUS != TW_MT_DATA_ACK)
 		return 0;
@@ -212,7 +235,7 @@ ssd1306_send_command_stream_from_flash_mem(const __flash uint8_t* data, uint16_t
 	if (TW_STATUS != TW_MT_SLA_ACK)
 		return 0;
 
-	// Send SSD1306 startup sequence
+	// Send commands
 	twi_send_data(SSD1306_COMMAND_STREAM);
 	if (TW_STATUS != TW_MT_DATA_ACK)
 		return 0;
@@ -262,15 +285,59 @@ ssd1306_clear() {
 	if (TW_STATUS != TW_MT_SLA_ACK)
 		return 0;
 
-	// Send the bitmap data as a stream
+	// Send request for data stream
 	twi_send_data(SSD1306_DATA_STREAM);
 	if (TW_STATUS != TW_MT_DATA_ACK)
 		return 0;
-
+	
+	// Send the bitmap data
 	for(uint16_t i = SSD1306_framebuffer_size; i != 0; --i) {
 		twi_send_data(0x00);
 		if (TW_STATUS != TW_MT_DATA_ACK)
 			return 0;
+	}
+
+	// Send stop
+	twi_stop();
+
+	// Job done;
+	return 1;
+}
+
+
+uint8_t
+ssd1306_upload_charmap(const __flash uint8_t* font,
+                       const char* charmap) {
+	// Send START
+	twi_start();
+	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+		return 0;
+
+	// Send slave address
+	twi_send_slave_address(SSD1306_slave_address);
+	if (TW_STATUS != TW_MT_SLA_ACK)
+		return 0;
+
+	// Send request for data stream
+	twi_send_data(SSD1306_DATA_STREAM);
+	if (TW_STATUS != TW_MT_DATA_ACK)
+		return 0;
+
+	// Send the bitmap data
+	static const uint8_t charmap_width = SSD1306_framebuffer_width / 8;	
+	static const uint8_t charmap_height = SSD1306_framebuffer_height / 8;
+	
+	for(uint8_t i = charmap_height; i != 0; --i) {
+		for(uint8_t j = charmap_width; j != 0; --j, ++charmap) {
+			const __flash uint8_t* glyph_data = font;
+			glyph_data += *charmap * 8;
+			
+			for(uint8_t k = 8; k != 0; --k, ++glyph_data) {
+				twi_send_data(*glyph_data);
+				if (TW_STATUS != TW_MT_DATA_ACK)
+					return 0;
+			}
+		}
 	}
 
 	// Send stop
@@ -293,11 +360,12 @@ ssd1306_upload_framebuffer(const __flash uint8_t* bitmap) {
 	if (TW_STATUS != TW_MT_SLA_ACK)
 		return 0;
 
-	// Send the bitmap data as a stream
+	// Send request for data stream
 	twi_send_data(SSD1306_DATA_STREAM);
 	if (TW_STATUS != TW_MT_DATA_ACK)
 		return 0;
 
+	// Send the bitmap data
 	const __flash uint8_t* pixel = bitmap;
 	for(uint16_t i = SSD1306_framebuffer_size; i != 0; --i, ++pixel) {
 		twi_send_data(*pixel);
