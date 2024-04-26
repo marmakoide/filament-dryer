@@ -119,7 +119,37 @@ SSD1306_128x64_init_sequence[] = {
 
 
 static uint8_t
-ssd1306_send_command_stream(const __flash uint8_t* data, uint16_t data_size) {
+ssd1306_send_command(uint8_t command, const uint8_t* data, uint16_t data_size) {
+	twi_start();
+	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+		return 0;
+
+	// Send slave address
+	twi_send_slave_address(SSD1306_slave_address);
+	if (TW_STATUS != TW_MT_SLA_ACK)
+		return 0;
+
+	// Send command
+	twi_send_data(SSD1306_COMMAND);
+	twi_send_data(command);
+
+	if (data)
+		for( ; data_size != 0; --data_size) {
+			twi_send_data(*data++);
+			if (TW_STATUS != TW_MT_DATA_ACK)
+				return 0;
+		}
+	
+	// Send stop
+	twi_stop();
+
+	// Job done;
+	return 1;
+}
+
+
+static uint8_t
+ssd1306_send_command_stream(const uint8_t* data, uint16_t data_size) {
 	// Send START
 	twi_start();
 	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
@@ -135,9 +165,39 @@ ssd1306_send_command_stream(const __flash uint8_t* data, uint16_t data_size) {
 	if (TW_STATUS != TW_MT_DATA_ACK)
 		return 0;
 
-	const __flash uint8_t* command_array_ptr = data;
 	for( ; data_size != 0; --data_size) {
-		twi_send_data(*command_array_ptr++);
+		twi_send_data(*data++);
+		if (TW_STATUS != TW_MT_DATA_ACK)
+			return 0;
+	}
+
+	// Send stop
+	twi_stop();
+
+	// Job done;
+	return 1;
+}
+
+
+static uint8_t
+ssd1306_send_command_stream_from_flash_mem(const __flash uint8_t* data, uint16_t data_size) {
+	// Send START
+	twi_start();
+	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+		return 0;
+
+	// Send slave address
+	twi_send_slave_address(SSD1306_slave_address);
+	if (TW_STATUS != TW_MT_SLA_ACK)
+		return 0;
+
+	// Send SSD1306 startup sequence
+	twi_send_data(SSD1306_COMMAND_STREAM);
+	if (TW_STATUS != TW_MT_DATA_ACK)
+		return 0;
+
+	for( ; data_size != 0; --data_size) {
+		twi_send_data(*data++);
 		if (TW_STATUS != TW_MT_DATA_ACK)
 			return 0;
 	}
@@ -153,7 +213,7 @@ ssd1306_send_command_stream(const __flash uint8_t* data, uint16_t data_size) {
 uint8_t
 ssd1306_init() {
     return
-    	ssd1306_send_command_stream(
+    	ssd1306_send_command_stream_from_flash_mem(
     		SSD1306_128x32_init_sequence,
     		sizeof(SSD1306_128x32_init_sequence)
     	);
@@ -225,194 +285,62 @@ ssd1306_upload_framebuffer(const __flash uint8_t* bitmap) {
 
 uint8_t
 ssd1306_set_display_on() {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_DISPLAY_ON);
-	    
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	return ssd1306_send_command(SSD1306_DISPLAY_ON, 0, 0);
 }
 
 
 uint8_t
 ssd1306_set_display_off() {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_DISPLAY_OFF);
-
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	return ssd1306_send_command(SSD1306_DISPLAY_OFF, 0, 0);
 }
 
 
 uint8_t
 ssd1306_set_normal_display_mode() {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_DIS_NORMAL);
-
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	return ssd1306_send_command(SSD1306_DIS_NORMAL, 0, 0);
 }
 
 
 uint8_t
 ssd1306_set_inverse_display_mode() {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_DIS_INVERSE);
-
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	return ssd1306_send_command(SSD1306_DIS_INVERSE, 0, 0);
 }
 
 
 uint8_t
 ssd1306_activate_scroll() {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_ACTIVE_SCROLL);
-
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	return ssd1306_send_command(SSD1306_ACTIVE_SCROLL, 0, 0);
 }
 
 
 uint8_t
 ssd1306_deactivate_scroll() {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_DEACT_SCROLL);
-
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	return ssd1306_send_command(SSD1306_DEACT_SCROLL, 0, 0);
 }
 
 
 uint8_t
 ssd1306_setup_horizontal_scroll(uint8_t start, uint8_t stop, int left_to_right) {
-	twi_start();
-	twi_send_slave_address(SSD1306_slave_address);
-
-	twi_send_data(SSD1306_COMMAND_STREAM);
-
-	if (left_to_right)
-		twi_send_data(SSD1306_RIGHT_HORIZONTAL_SCROLL);
-	else
-		twi_send_data(SSD1306_LEFT_HORIZONTAL_SCROLL);
-
-	twi_send_data(0x00);
-	twi_send_data(start);
-	twi_send_data(0x00);
-	twi_send_data(stop);
-	twi_send_data(0x00);
-	twi_send_data(0xff);
-
-	twi_stop();
-
-	// Job done;
-	return 1;
+	uint8_t data[7] = {
+		0x00,
+		0x00,
+		start,
+		0x00,
+		stop,
+		0x00,
+		0xff
+	};
+	data[0] = left_to_right ? SSD1306_RIGHT_HORIZONTAL_SCROLL : SSD1306_LEFT_HORIZONTAL_SCROLL;
+	
+	return ssd1306_send_command_stream(data, sizeof(data));
 }
 
 
 uint8_t
 ssd1306_set_vertical_offset(int8_t offset) {
-	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
-		return 0;
-
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
-		return 0;
-
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(SSD1306_DISPLAY_OFFSET);
-	twi_send_data(offset);
-
-	// Send stop
-	twi_stop();
-
-	// Job done;
-	return 1;
+	uint8_t data[2] = {
+		SSD1306_DISPLAY_OFFSET,
+		offset
+	};
+	return ssd1306_send_command_stream(data, sizeof(data));
 }
