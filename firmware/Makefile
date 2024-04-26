@@ -13,7 +13,7 @@ AVRKIT_INCLUDES=$(AVRKIT_PATH)/include
 
 all: $(TARGET)
 
-$(SRC)/bitmap.c: ./assets/bitmap-small.png ./bitmap-to-framebuffer
+$(SRC)/bitmap.c: ./assets/bitmap.png ./bitmap-to-framebuffer
 	python3 ./bitmap-to-framebuffer $< > $@
 
 $(SRC)/bitmap.o: $(SRC)/bitmap.c

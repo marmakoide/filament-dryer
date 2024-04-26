@@ -1,7 +1,17 @@
 #ifndef FILAMENT_DRYER_CONFIG_H
 #define FILAMENT_DRYER_CONFIG_H
 
+/*
+  Size for the SD1306-driven display
+ */
 
+#define SSD1306_DISPLAY_SIZE__128x32 0x00
+#define SSD1306_DISPLAY_SIZE__128x64 0x01
+
+#define SSD1306_DISPLAY_SIZE SSD1306_DISPLAY_SIZE__128x64
+
+
+// I2C identifier for the SSD1306-driven display
 #define SSD1306_I2C_ADDRESS 0x3c
 
 
