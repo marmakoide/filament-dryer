@@ -2,11 +2,18 @@
 
 import sys
 import array
-import argparse
+import click
 import itertools
 import skimage.io
 import skimage.filters
 
+
+@click.group()
+def cli():
+    pass
+
+
+# --- Utility functions -------------------------------------------------------
 
 def load_image(path):
      # Load the input as gray scale
@@ -38,19 +45,21 @@ def generate_c_array(out, data, array_name):
     out.write('\n};\n')
 
 
-def main():
-    # Command line arguments
-    parser = argparse.ArgumentParser(description = 'Convert a bitmap picture to raw data for a SSD1306 oled screen in horizontal addressing mode')
-    parser.add_argument('--array-name', default = 'framebuffer_data')
-    parser.add_argument('input_path')
+# --- Framebuffer data generation ---------------------------------------------
 
-    args = parser.parse_args()
-
-    # Processing
-    img = load_image(args.input_path)
+@cli.command()
+@click.option('--array-name', show_default  =True, default = 'framebuffer_data', help = "Name of the generated array.")
+@click.argument('input_path', type = click.Path(exists = True, dir_okay = False))
+def to_framebuffer(array_name, input_path):
+    """
+    Convert a bitmap picture to raw data for a SSD1306 oled screen in horizontal addressing mode
+    """
+    img = load_image(input_path)
     data = build_framebuffer_data(img)
-    generate_c_array(sys.stdout, data, args.array_name)
+    generate_c_array(sys.stdout, data, array_name)
 
+
+# --- Main entry point --------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+    cli()
