@@ -306,8 +306,8 @@ ssd1306_clear() {
 
 
 uint8_t
-ssd1306_upload_charmap(const __flash uint8_t* font,
-                       const char* charmap) {
+ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
+                           const char* charmap) {
 	// Send START
 	twi_start();
 	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
@@ -333,6 +333,62 @@ ssd1306_upload_charmap(const __flash uint8_t* font,
 			glyph_data += *charmap * 8;
 			
 			for(uint8_t k = 8; k != 0; --k, ++glyph_data) {
+				twi_send_data(*glyph_data);
+				if (TW_STATUS != TW_MT_DATA_ACK)
+					return 0;
+			}
+		}
+	}
+
+	// Send stop
+	twi_stop();
+
+	// Job done;
+	return 1;
+}
+
+
+uint8_t
+ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
+                             const char* charmap) {
+	// Send START
+	twi_start();
+	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+		return 0;
+
+	// Send slave address
+	twi_send_slave_address(SSD1306_slave_address);
+	if (TW_STATUS != TW_MT_SLA_ACK)
+		return 0;
+
+	// Send request for data stream
+	twi_send_data(SSD1306_DATA_STREAM);
+	if (TW_STATUS != TW_MT_DATA_ACK)
+		return 0;
+
+	// Send the bitmap data
+	static const uint8_t charmap_width = SSD1306_framebuffer_width / 16;	
+	static const uint8_t charmap_height = SSD1306_framebuffer_height / 16;
+	
+	for(uint8_t i = charmap_height; i != 0; --i, charmap += charmap_width) {
+		const char* charmap_row = charmap;
+		for(uint8_t j = charmap_width; j != 0; --j, ++charmap_row) {
+			const __flash uint8_t* glyph_data = font;
+			glyph_data += *charmap_row * 32;
+			
+			for(uint8_t k = 16; k != 0; --k, ++glyph_data) {
+				twi_send_data(*glyph_data);
+				if (TW_STATUS != TW_MT_DATA_ACK)
+					return 0;
+			}
+		}
+
+		charmap_row = charmap;
+		for(uint8_t j = charmap_width; j != 0; --j, ++charmap_row) {
+			const __flash uint8_t* glyph_data = font;
+			glyph_data += *charmap_row * 32 + 16;
+			
+			for(uint8_t k = 16; k != 0; --k, ++glyph_data) {
 				twi_send_data(*glyph_data);
 				if (TW_STATUS != TW_MT_DATA_ACK)
 					return 0;

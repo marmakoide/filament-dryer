@@ -11,14 +11,16 @@
 
 
 extern const __flash uint8_t
-framebuffer_data[];
-
-
-extern const __flash uint8_t
 font8x8_data[];
 
 
-static char charmap[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV";
+extern const __flash uint8_t
+font16x16_data[];
+
+
+//static char charmap[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV";
+
+static char charmap[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 
 
 int
@@ -28,8 +30,7 @@ main(void) {
 	sei();
 
 	uint8_t ret = ssd1306_init();
-	//ssd1306_upload_framebuffer(framebuffer_data);
-	ssd1306_upload_charmap(font8x8_data, charmap);
+	ssd1306_upload_charmap_16x16(font16x16_data, charmap);
 	//ssd1306_setup_horizontal_scroll(0, 2, 1, ssd1306_scroll_speed__2);
 	//ssd1306_activate_scroll();
 	

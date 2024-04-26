@@ -47,12 +47,11 @@ def build_font_data(img, font_format):
         glyph_width, glyph_height = 16, 16
 
     glyph_data_size = (glyph_width * glyph_height) // 8
-    
     ret = array.array('B', itertools.repeat(0, 256 * glyph_data_size))
-    for k, (i, a, j, c) in enumerate(itertools.product(range(16), range(glyph_height // 8), range(16), range(glyph_width))):
-        u, v = glyph_width * j + c, glyph_height * i
-        ret[k] = decode_binary(img[v+8*a:v+8*(a+1),u])
-        
+    for k, (i, j, a, b) in enumerate(itertools.product(range(16), range(16), range(glyph_height // 8), range(glyph_width))):
+        u, v = glyph_width * j + b, glyph_height * i + 8 * a
+        ret[k] = decode_binary(img[v:v+8,u])
+            
     return ret
 
 
@@ -74,6 +73,7 @@ def to_framebuffer(array_name, input_path):
     Convert a bitmap picture to raw data for a SSD1306 oled screen set in 
     horizontal addressing mode
     """
+    
     img = load_image(input_path)
     data = build_framebuffer_data(img)
     generate_c_array(click.get_text_stream('stdout'), data, array_name)
@@ -90,9 +90,15 @@ def to_font(array_name, font_format, input_path):
     Convert a bitmap picture to 8x8 font data for a SSD1306 oled screen set in
     horizontal addressing mode
     """
+
+    if font_format == '8x8':
+        input_shape = (128, 128)
+    elif font_format == '16x16':
+        input_shape = (256, 256)
+    
     img = load_image(input_path)
-    if img.shape[0] != 128 or img.shape[1] != 128:
-        click.echo(message = "Invalid input picture dimension, should be 128x128", err = True)
+    if img.shape[0] != input_shape[0] or img.shape[1] != input_shape[1]:
+        click.echo(message = f"Invalid input picture dimension, should be {input_shape[0]}x{input_shape[1]}", err = True)
         raise RuntimeError()
     
     data = build_font_data(img, font_format)

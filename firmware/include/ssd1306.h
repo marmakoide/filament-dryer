@@ -29,7 +29,14 @@ ssd1306_upload_framebuffer(const __flash uint8_t* bitmap);
 
 
 extern uint8_t
-ssd1306_upload_charmap(
+ssd1306_upload_charmap_8x8(
+	const __flash uint8_t* font,
+	const char* charmap
+);
+
+
+extern uint8_t
+ssd1306_upload_charmap_16x16(
 	const __flash uint8_t* font,
 	const char* charmap
 );
