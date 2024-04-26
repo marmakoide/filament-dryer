@@ -369,33 +369,23 @@ ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
 	// Send the bitmap data
 	static const uint8_t charmap_width = SSD1306_framebuffer_width / 16;	
 	static const uint8_t charmap_height = SSD1306_framebuffer_height / 16;
-	
-	for(uint8_t i = charmap_height; i != 0; --i, charmap += charmap_width) {
-		const char* charmap_row = charmap;
-		for(uint8_t j = charmap_width; j != 0; --j, ++charmap_row) {
-			const __flash uint8_t* glyph_data = font;
-			glyph_data += *charmap_row * 32;
-			
-			for(uint8_t k = 16; k != 0; --k, ++glyph_data) {
-				twi_send_data(*glyph_data);
-				if (TW_STATUS != TW_MT_DATA_ACK)
-					return 0;
-			}
-		}
 
-		charmap_row = charmap;
-		for(uint8_t j = charmap_width; j != 0; --j, ++charmap_row) {
-			const __flash uint8_t* glyph_data = font;
-			glyph_data += *charmap_row * 32 + 16;
-			
-			for(uint8_t k = 16; k != 0; --k, ++glyph_data) {
-				twi_send_data(*glyph_data);
-				if (TW_STATUS != TW_MT_DATA_ACK)
-					return 0;
+	for(uint8_t i = charmap_height; i != 0; --i, charmap += charmap_width) {
+		for(uint8_t m = 0; m < 32; m += 16) {
+			const char* charmap_row = charmap;
+			for(uint8_t j = charmap_width; j != 0; --j, ++charmap_row) {
+				const __flash uint8_t* glyph_data = font;
+				glyph_data += *charmap_row * 32 + m;
+				
+				for(uint8_t k = 16; k != 0; --k, ++glyph_data) {
+					twi_send_data(*glyph_data);
+					if (TW_STATUS != TW_MT_DATA_ACK)
+						return 0;
+				}
 			}
 		}
 	}
-
+	
 	// Send stop
 	twi_stop();
 
