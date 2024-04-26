@@ -41,7 +41,7 @@ def generate_c_array(out, data, array_name):
 def main():
     # Command line arguments
     parser = argparse.ArgumentParser(description = 'Convert a bitmap picture to raw data for a SSD1306 oled screen in horizontal addressing mode')
-    parser.add_argument('--array-name', default = 'bitmap_data')
+    parser.add_argument('--array-name', default = 'framebuffer_data')
     parser.add_argument('input_path')
 
     args = parser.parse_args()
