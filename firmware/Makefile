@@ -16,12 +16,14 @@ bitmap.c: ./assets/bitmap-small.png ./bitmap-to-framebuffer
 
 bitmap.o: bitmap.c
 
+twi.o: twi.c twi.h
+
 firmware.o: firmware.c config.h
 
 .c.o:
 	avr-gcc -I$(INCLUDES) -Os -DF_CPU=$(F_CPU) -D__AVRKIT_$(MCU)__ -mmcu=$(MCU) -c -o $@ $<
 
-firmware.elf: firmware.o bitmap.o
+firmware.elf: firmware.o twi.o bitmap.o
 	avr-gcc -mmcu=$(MCU) $^ -o $@
 
 %.hex: %.elf
