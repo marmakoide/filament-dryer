@@ -17,7 +17,7 @@ $(SRC)/bitmap.c: ./assets/bitmap.png ./bitmap-tool
 	python3 ./bitmap-tool to-framebuffer $< > $@
 
 $(SRC)/font-8x8.c: ./assets/font-8x8.png ./bitmap-tool
-	python3 ./bitmap-tool to-font $< > $@
+	python3 ./bitmap-tool to-font --array-name=font8x8_data $< > $@
 
 $(SRC)/font-8x8.o: $(SRC)/font-8x8.c
 

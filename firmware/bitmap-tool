@@ -67,7 +67,7 @@ def generate_c_array(out, data, array_name):
 # --- Framebuffer data generation ---------------------------------------------
 
 @cli.command()
-@click.option('--array-name', show_default  =True, default = 'framebuffer_data', help = "Name of the generated array.")
+@click.option('--array-name', show_default = True, default = 'framebuffer_data', help = "Name of the generated array.")
 @click.argument('input_path', type = click.Path(exists = True, dir_okay = False))
 def to_framebuffer(array_name, input_path):
     """
