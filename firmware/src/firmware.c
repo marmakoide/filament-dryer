@@ -22,7 +22,7 @@ main(void) {
 
 	uint8_t ret = ssd1306_init();
 	ssd1306_upload_framebuffer(framebuffer_data);
-	ssd1306_setup_horizontal_scroll(0, 3, 1);
+	ssd1306_setup_horizontal_scroll(0, 3, 1, ssd1306_scroll_speed__256);
 	ssd1306_activate_scroll();
 	
 	// Main loop

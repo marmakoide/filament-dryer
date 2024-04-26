@@ -320,12 +320,17 @@ ssd1306_deactivate_scroll() {
 
 
 uint8_t
-ssd1306_setup_horizontal_scroll(uint8_t start, uint8_t stop, int left_to_right) {
+ssd1306_setup_horizontal_scroll(
+	uint8_t start,
+	uint8_t stop,
+	int left_to_right,
+	enum ssd1306_scroll_speed speed
+) {
 	uint8_t data[7] = {
 		0x00,
 		0x00,
 		start,
-		0x00,
+		speed,
 		stop,
 		0x00,
 		0xff
