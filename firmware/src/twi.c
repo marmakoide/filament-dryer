@@ -1,7 +1,5 @@
 #include "twi.h"
-
-//#define F_SCL 100000UL // Clock frequency for I2C protocol
-#define F_SCL 400000UL // Clock frequency for I2C protocol
+#include "config.h"
 
 
 void
