@@ -1,3 +1,4 @@
+#include <util/twi.h>
 #include "twi.h"
 #include "config.h"
 
@@ -17,10 +18,15 @@ twi_init() {
 }
 
 
-void
+uint8_t
 twi_start() {
 	TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN);
 	loop_until_bit_is_set(TWCR, TWINT);
+	
+	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+		return 0;
+	
+	return 1;
 }
 
 
@@ -30,17 +36,68 @@ twi_stop() {
 }
 
 
-void
-twi_send_slave_address(uint8_t address) {
+uint8_t
+twi_request_transmission(uint8_t address) {
 	TWDR = (address << 1) | TW_WRITE;
-	TWCR = (1 << TWINT) | (1 << TWEN);
+	TWCR = _BV(TWINT) | _BV(TWEN);
 	loop_until_bit_is_set(TWCR, TWINT);
+	
+	if (TW_STATUS != TW_MT_SLA_ACK)
+		return 0;
+
+	return 1;
 }
 
 
-void
-twi_send_data(uint8_t data) {
-	TWDR = data;
-	TWCR = (1 << TWINT) | (1 << TWEN);
+uint8_t
+twi_request_reception(uint8_t address) {
+	TWDR = (address << 1) | TW_READ;
+	TWCR = _BV(TWINT) | _BV(TWEN);
 	loop_until_bit_is_set(TWCR, TWINT);
+	
+	if (TW_STATUS != TW_MR_SLA_ACK)
+		return 0;
+
+	return 1;
+}
+
+
+uint8_t
+twi_transmit(uint8_t data) {
+	TWDR = data;
+	TWCR = _BV(TWINT) | _BV(TWEN);
+	loop_until_bit_is_set(TWCR, TWINT);
+
+	if (TW_STATUS != TW_MT_DATA_ACK)
+		return 0;
+
+	return 1;
+}
+
+
+uint8_t
+twi_receive_ack(uint8_t* data) {
+	TWCR = _BV(TWINT) | _BV(TWEN) | (1 << TWEA);
+	loop_until_bit_is_set(TWCR, TWINT);
+
+	if (TW_STATUS != TW_MR_DATA_ACK)
+		return 0;
+	
+	*data = TWDR;
+
+	return 1;
+}
+
+
+uint8_t
+twi_receive_nack(uint8_t* data) {
+	TWCR = _BV(TWINT) | _BV(TWEN);
+	loop_until_bit_is_set(TWCR, TWINT);
+
+	if (TW_STATUS != TW_MR_DATA_NACK)
+		return 0;
+	
+	*data = TWDR;
+
+	return 1;
 }

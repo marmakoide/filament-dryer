@@ -10,6 +10,7 @@
 #include <avrkit/GPIO.h>
 
 #include "twi.h"
+#include "sht3x.h"
 #include "ssd1306.h"
 #include "config.h"
 
@@ -20,14 +21,14 @@ extern const __flash uint8_t
 font8x8_data[];
 
 
-extern const __flash uint8_t
-font16x16_data[];
+//extern const __flash uint8_t
+///font16x16_data[];
 
 
 // --- RAM data ---------------------------------------------------------------
 
-static char charmap[32];
-const static uint8_t charmap_width = 8;
+static char charmap[128];
+const static uint8_t charmap_width = 16;
 
 
 enum RotaryEncoderEvent {
@@ -43,6 +44,9 @@ volatile uint16_t tick_counter = 0;
 volatile uint8_t target_temperature = 50;
 volatile uint8_t remaining_hours = 1;
 volatile uint8_t remaining_minutes = 0;
+int16_t temperature = 0;
+uint16_t humidity = 0;
+uint8_t measure_acquired = 0;
 
 
 // --- Charmap handling -------------------------------------------------------
@@ -205,24 +209,37 @@ render_charmap() {
 		charmap_print(3, 2, "off");
 
 	charmap_print(2, 0, "%02u:%02u", remaining_hours, remaining_minutes);
-	charmap_print(3, 1, "%uc", target_temperature);	
+	charmap_print(3, 1, "%uc", target_temperature);
+
+	if (measure_acquired)
+		charmap_print(
+			0, 4, "%d.%uc %u.%u%%",
+			temperature / 10,
+			temperature % 10,
+			humidity / 10,
+			humidity % 10
+		);
 }
 
 
 int
 main(void) {
 	setup();
+
+	// Initiate the first measure
+	sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 	
 	// Main loop
 	while(1) {
-		/*
-		// Update state
-		while(tick_counter >= 50) { // 3000 ticks at 50 Hz => 1 minute
+		// Request a temperature and humidity every 50 ticks
+		if (tick_counter >= 50) {
 			tick_counter -= 50;
-			decrease_remaining_time();			
+			sht3x_acquire_measure(&temperature, &humidity);
+			measure_acquired = 1;
+			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 		}
-		*/
 		
+		// Update remaining time according to UI events
 		switch(rotary_encoder_event) {
 			case RotaryEncoderEvent_left:
 				decrease_remaining_time();
@@ -239,7 +256,7 @@ main(void) {
 		
 		// Refresh the display
 		render_charmap();
-		ssd1306_upload_charmap_16x16(font16x16_data, charmap);	
+		ssd1306_upload_charmap_8x8(font8x8_data, charmap);	
 
 		// Goes to sleep, awaken every 1/50 secs
 		sleep_mode();

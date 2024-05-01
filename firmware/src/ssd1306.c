@@ -164,25 +164,22 @@ SSD1306_128x64_init_sequence[] = {
 
 static uint8_t
 ssd1306_send_command(uint8_t command, const uint8_t* data, uint16_t data_size) {
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	// Send START
+	if (!twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
-	// Send command
-	twi_send_data(SSD1306_COMMAND);
-	twi_send_data(command);
+	// Transmit the command
+	twi_transmit(SSD1306_COMMAND);
+	twi_transmit(command);
 
 	if (data)
-		for( ; data_size != 0; --data_size) {
-			twi_send_data(*data++);
-			if (TW_STATUS != TW_MT_DATA_ACK)
+		for( ; data_size != 0; --data_size)
+			if (!twi_transmit(*data++))
 				return 0;
-		}
 	
 	// Send stop
 	twi_stop();
@@ -195,25 +192,20 @@ ssd1306_send_command(uint8_t command, const uint8_t* data, uint16_t data_size) {
 static uint8_t
 ssd1306_send_command_stream(const uint8_t* data, uint16_t data_size) {
 	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	if (!twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
 	// Send commands
-	twi_send_data(SSD1306_COMMAND_STREAM);
-	if (TW_STATUS != TW_MT_DATA_ACK)
+	if (!twi_transmit(SSD1306_COMMAND_STREAM))
 		return 0;
 
-	for( ; data_size != 0; --data_size) {
-		twi_send_data(*data++);
-		if (TW_STATUS != TW_MT_DATA_ACK)
+	for( ; data_size != 0; --data_size)
+		if (!twi_transmit(*data++))
 			return 0;
-	}
 
 	// Send stop
 	twi_stop();
@@ -226,25 +218,20 @@ ssd1306_send_command_stream(const uint8_t* data, uint16_t data_size) {
 static uint8_t
 ssd1306_send_command_stream_from_flash_mem(const __flash uint8_t* data, uint16_t data_size) {
 	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	if (!twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
 	// Send commands
-	twi_send_data(SSD1306_COMMAND_STREAM);
-	if (TW_STATUS != TW_MT_DATA_ACK)
+	if (!twi_transmit(SSD1306_COMMAND_STREAM))
 		return 0;
 
-	for( ; data_size != 0; --data_size) {
-		twi_send_data(*data++);
-		if (TW_STATUS != TW_MT_DATA_ACK)
+	for( ; data_size != 0; --data_size)
+		if (!twi_transmit(*data++))
 			return 0;
-	}
 
 	// Send stop
 	twi_stop();
@@ -276,26 +263,21 @@ ssd1306_init() {
 uint8_t
 ssd1306_clear() {
 	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	if (!twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
 	// Send request for data stream
-	twi_send_data(SSD1306_DATA_STREAM);
-	if (TW_STATUS != TW_MT_DATA_ACK)
+	if (!twi_transmit(SSD1306_DATA_STREAM))
 		return 0;
 	
 	// Send the bitmap data
-	for(uint16_t i = SSD1306_framebuffer_size; i != 0; --i) {
-		twi_send_data(0x00);
-		if (TW_STATUS != TW_MT_DATA_ACK)
+	for(uint16_t i = SSD1306_framebuffer_size; i != 0; --i)
+		if (!twi_transmit(0x00))
 			return 0;
-	}
 
 	// Send stop
 	twi_stop();
@@ -309,18 +291,15 @@ uint8_t
 ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
                            const char* charmap) {
 	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	if (!twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
 	// Send request for data stream
-	twi_send_data(SSD1306_DATA_STREAM);
-	if (TW_STATUS != TW_MT_DATA_ACK)
+	if (!twi_transmit(SSD1306_DATA_STREAM))
 		return 0;
 
 	// Send the bitmap data
@@ -332,11 +311,9 @@ ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
 			const __flash uint8_t* glyph_data = font;
 			glyph_data += *charmap * 8;
 			
-			for(uint8_t k = 8; k != 0; --k, ++glyph_data) {
-				twi_send_data(*glyph_data);
-				if (TW_STATUS != TW_MT_DATA_ACK)
+			for(uint8_t k = 8; k != 0; --k, ++glyph_data)
+				if (!twi_transmit(*glyph_data))
 					return 0;
-			}
 		}
 	}
 
@@ -352,18 +329,15 @@ uint8_t
 ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
                              const char* charmap) {
 	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	if (twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
 	// Send request for data stream
-	twi_send_data(SSD1306_DATA_STREAM);
-	if (TW_STATUS != TW_MT_DATA_ACK)
+	if (!twi_transmit(SSD1306_DATA_STREAM))
 		return 0;
 
 	// Send the bitmap data
@@ -377,11 +351,9 @@ ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
 				const __flash uint8_t* glyph_data = font;
 				glyph_data += *charmap_row * 32 + m;
 				
-				for(uint8_t k = 16; k != 0; --k, ++glyph_data) {
-					twi_send_data(*glyph_data);
-					if (TW_STATUS != TW_MT_DATA_ACK)
+				for(uint8_t k = 16; k != 0; --k, ++glyph_data)
+					if (!twi_transmit(*glyph_data))
 						return 0;
-				}
 			}
 		}
 	}
@@ -397,25 +369,21 @@ ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
 uint8_t
 ssd1306_upload_framebuffer(const __flash uint8_t* bitmap) {
 	// Send START
-	twi_start();
-	if ((TW_STATUS != TW_START) && (TW_STATUS != TW_REP_START))
+	if (!twi_start())
 		return 0;
 
-	// Send slave address
-	twi_send_slave_address(SSD1306_slave_address);
-	if (TW_STATUS != TW_MT_SLA_ACK)
+	// Request for a transmission
+	if (!twi_request_transmission(SSD1306_slave_address))
 		return 0;
 
 	// Send request for data stream
-	twi_send_data(SSD1306_DATA_STREAM);
-	if (TW_STATUS != TW_MT_DATA_ACK)
+	if (!twi_transmit(SSD1306_DATA_STREAM))
 		return 0;
 
 	// Send the bitmap data
 	const __flash uint8_t* pixel = bitmap;
 	for(uint16_t i = SSD1306_framebuffer_size; i != 0; --i, ++pixel) {
-		twi_send_data(*pixel);
-		if (TW_STATUS != TW_MT_DATA_ACK)
+		if (!twi_transmit(*pixel))
 			return 0;
 	}
 

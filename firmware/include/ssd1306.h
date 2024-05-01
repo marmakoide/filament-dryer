@@ -13,7 +13,7 @@ enum ssd1306_scroll_speed {
 	ssd1306_scroll_speed__64  = 0x01,
 	ssd1306_scroll_speed__128 = 0x02,
 	ssd1306_scroll_speed__256 = 0x03,
-}; // ssd1306_scroll_speed
+}; // enum ssd1306_scroll_speed
 
 
 extern uint8_t

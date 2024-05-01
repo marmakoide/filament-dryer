@@ -19,7 +19,7 @@
 #define SSD1306_I2C_ADDRESS 0x3c
 
 // I2C identifier for the SHT21-DIS temperature and humidity sensor
-#define SHT31_DIS_I2C_ADDRESS 0x44
+#define SHT31_I2C_ADDRESS 0x44
 
 
 #endif /* FILAMENT_DRYER_CONFIG_H */

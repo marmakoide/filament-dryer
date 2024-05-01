@@ -1,24 +1,39 @@
 #ifndef FILAMENT_DRYER_TWI_H
 #define FILAMENT_DRYER_TWI_H
 
-#include <util/twi.h>
 #include <stdint.h>
 
 
 extern void
 twi_init();
 
-extern void
+
+extern uint8_t
 twi_start();
+
 
 extern void
 twi_stop();
 
-extern void
-twi_send_slave_address(uint8_t address);
 
-extern void
-twi_send_data(uint8_t data);
+extern uint8_t
+twi_request_transmission(uint8_t address);
+
+
+extern uint8_t
+twi_request_reception(uint8_t address);
+
+
+extern uint8_t
+twi_transmit(uint8_t data);
+
+
+extern uint8_t
+twi_receive_ack(uint8_t* data);
+
+
+extern uint8_t
+twi_receive_nack(uint8_t* data);
 
 
 #endif /* FILAMENT_DRYER_TWI_H */
