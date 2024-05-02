@@ -184,7 +184,7 @@ ssd1306_send_command(uint8_t command, const uint8_t* data, uint16_t data_size) {
 	// Send stop
 	twi_stop();
 
-	// Job done;
+	// Job done
 	return 1;
 }
 
@@ -210,7 +210,7 @@ ssd1306_send_command_stream(const uint8_t* data, uint16_t data_size) {
 	// Send stop
 	twi_stop();
 
-	// Job done;
+	// Job done
 	return 1;
 }
 
@@ -236,7 +236,7 @@ ssd1306_send_command_stream_from_flash_mem(const __flash uint8_t* data, uint16_t
 	// Send stop
 	twi_stop();
 
-	// Job done;
+	// Job done
 	return 1;
 }
 
@@ -261,7 +261,7 @@ ssd1306_init() {
 
 
 uint8_t
-ssd1306_clear() {
+ssd1306_upload_start() {
 	// Send START
 	if (!twi_start())
 		return 0;
@@ -273,38 +273,28 @@ ssd1306_clear() {
 	// Send request for data stream
 	if (!twi_transmit(SSD1306_DATA_STREAM))
 		return 0;
-	
-	// Send the bitmap data
-	for(uint16_t i = SSD1306_framebuffer_size; i != 0; --i)
-		if (!twi_transmit(0x00))
-			return 0;
 
+	// Job done
+	return 1;
+}
+
+
+extern uint8_t
+ssd1306_upload_end() {
 	// Send stop
 	twi_stop();
 
-	// Job done;
+	// Job done
 	return 1;
 }
 
 
 uint8_t
 ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
-                           const char* charmap) {
-	// Send START
-	if (!twi_start())
-		return 0;
-
-	// Request for a transmission
-	if (!twi_request_transmission(SSD1306_slave_address))
-		return 0;
-
-	// Send request for data stream
-	if (!twi_transmit(SSD1306_DATA_STREAM))
-		return 0;
-
+                           const char* charmap,
+                           uint8_t charmap_height) {
 	// Send the bitmap data
 	static const uint8_t charmap_width = SSD1306_framebuffer_width / 8;	
-	static const uint8_t charmap_height = SSD1306_framebuffer_height / 8;
 	
 	for(uint8_t i = charmap_height; i != 0; --i) {
 		for(uint8_t j = charmap_width; j != 0; --j, ++charmap) {
@@ -317,32 +307,17 @@ ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
 		}
 	}
 
-	// Send stop
-	twi_stop();
-
-	// Job done;
+	// Job done
 	return 1;
 }
 
 
 uint8_t
 ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
-                             const char* charmap) {
-	// Send START
-	if (twi_start())
-		return 0;
-
-	// Request for a transmission
-	if (!twi_request_transmission(SSD1306_slave_address))
-		return 0;
-
-	// Send request for data stream
-	if (!twi_transmit(SSD1306_DATA_STREAM))
-		return 0;
-
+                             const char* charmap,
+                             uint8_t charmap_height) {
 	// Send the bitmap data
-	static const uint8_t charmap_width = SSD1306_framebuffer_width / 16;	
-	static const uint8_t charmap_height = SSD1306_framebuffer_height / 16;
+	static const uint8_t charmap_width = SSD1306_framebuffer_width / 16;
 
 	for(uint8_t i = charmap_height; i != 0; --i, charmap += charmap_width) {
 		for(uint8_t m = 0; m < 32; m += 16) {
@@ -358,10 +333,7 @@ ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
 		}
 	}
 	
-	// Send stop
-	twi_stop();
-
-	// Job done;
+	// Job done
 	return 1;
 }
 
@@ -390,7 +362,7 @@ ssd1306_upload_framebuffer(const __flash uint8_t* bitmap) {
 	// Send stop
 	twi_stop();
 
-	// Job done;
+	// Job done
 	return 1;
 }
 

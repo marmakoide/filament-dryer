@@ -21,14 +21,19 @@ extern const __flash uint8_t
 font8x8_data[];
 
 
-//extern const __flash uint8_t
-///font16x16_data[];
+extern const __flash uint8_t
+font16x16_data[];
 
 
 // --- RAM data ---------------------------------------------------------------
 
-static char charmap[128];
-const static uint8_t charmap_width = 16;
+static char top_charmap[32]; // 2 lines of 16 chars
+const static uint8_t top_charmap_width = 16;
+const static uint8_t top_charmap_height = 2;
+
+static char bottom_charmap[24]; // 3 lines of 8 chars
+const static uint8_t bottom_charmap_width = 8;
+const static uint8_t bottom_charmap_height = 3;
 
 
 enum RotaryEncoderEvent {
@@ -53,22 +58,75 @@ uint8_t measure_acquired = 0;
 
 static void
 charmap_clear() {
-	memset(charmap, 0, sizeof(charmap));
+	memset(top_charmap, 0, sizeof(top_charmap));
+	memset(bottom_charmap, 0, sizeof(bottom_charmap));	
 }
 
 
 static void
-charmap_print(
+top_charmap_print(
 	uint8_t x,
 	uint8_t y,
 	const char* format,
 	...) {
-	char* charmap_ptr = charmap;
-	charmap_ptr += charmap_width * y + x;
+	char* charmap_ptr = top_charmap;
+	charmap_ptr += top_charmap_width * y + x;
 
 	va_list argp;
 	va_start(argp, format);
-	vsnprintf(charmap_ptr, charmap_width - x, format, argp);
+	vsnprintf(charmap_ptr, top_charmap_width - x, format, argp);
+}
+
+
+static void
+bottom_charmap_print(
+	uint8_t x,
+	uint8_t y,
+	const char* format,
+	...) {
+	char* charmap_ptr = bottom_charmap;
+	charmap_ptr += bottom_charmap_width * y + x;
+
+	va_list argp;
+	va_start(argp, format);
+	vsnprintf(charmap_ptr, bottom_charmap_width - x, format, argp);
+}
+
+
+static void
+charmap_render() {
+	charmap_clear();
+	
+	top_charmap_print(
+		0, 0,
+		" %02uc     %02u:%02u",
+		target_temperature,
+		remaining_hours,
+		remaining_minutes
+	);
+	
+	if (measure_acquired) {
+		// Bound the measured temperature and humidity to fit in the display
+		int16_t display_temperature = temperature;
+		uint16_t display_humidity = humidity;
+		
+		if (display_temperature < 0)
+			display_temperature = 0;
+
+		if (display_temperature > 990)
+			display_temperature = 990;
+
+		if (display_humidity > 990)
+			display_humidity = 990;
+
+		// Render the measured temperature and humidity
+		bottom_charmap_print(
+			0, 0,
+			"%02uc %02u%%",
+			display_temperature / 10,
+			display_humidity / 10
+		);
+	}
 }
 
 
@@ -199,29 +257,6 @@ decrease_remaining_time() {
 }
 
 
-static void
-render_charmap() {
-	charmap_clear();
-	
-	if (push_button_state)
-		charmap_print(3, 2, "on");
-	else
-		charmap_print(3, 2, "off");
-
-	charmap_print(2, 0, "%02u:%02u", remaining_hours, remaining_minutes);
-	charmap_print(3, 1, "%uc", target_temperature);
-
-	if (measure_acquired)
-		charmap_print(
-			0, 4, "%d.%uc %u.%u%%",
-			temperature / 10,
-			temperature % 10,
-			humidity / 10,
-			humidity % 10
-		);
-}
-
-
 int
 main(void) {
 	setup();
@@ -255,8 +290,11 @@ main(void) {
 		rotary_encoder_event = RotaryEncoderEvent_none;
 		
 		// Refresh the display
-		render_charmap();
-		ssd1306_upload_charmap_8x8(font8x8_data, charmap);	
+		charmap_render();
+		ssd1306_upload_start();
+		ssd1306_upload_charmap_8x8(font8x8_data, top_charmap, top_charmap_height);	
+		ssd1306_upload_charmap_16x16(font16x16_data, bottom_charmap, bottom_charmap_height);	
+		ssd1306_upload_end();
 
 		// Goes to sleep, awaken every 1/50 secs
 		sleep_mode();
