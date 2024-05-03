@@ -1,3 +1,4 @@
+#include <avr/sfr_defs.h>
 #include "config.h"
 #include "twi.h"
 #include "ssd1306.h"
@@ -298,12 +299,16 @@ ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
 	
 	for(uint8_t i = charmap_height; i != 0; --i) {
 		for(uint8_t j = charmap_width; j != 0; --j, ++charmap) {
-			uint8_t glyph_id = *charmap & 0x7f;
-
+			uint8_t glyph_id = *charmap & ~_BV(7);
+			
+			uint8_t mask = 0x00;
+			mask -= (*charmap & _BV(7)) != 0;
+			
 			const __flash uint8_t* glyph_data = font;
 			glyph_data += glyph_id * 8;
+			
 			for(uint8_t k = 8; k != 0; --k, ++glyph_data)
-				if (!twi_transmit(*glyph_data))
+				if (!twi_transmit(*glyph_data ^ mask))
 					return 0;
 		}
 	}
@@ -324,13 +329,16 @@ ssd1306_upload_charmap_16x16(const __flash uint8_t* font,
 		for(uint8_t m = 0; m < 32; m += 16) {
 			const char* charmap_row = charmap;
 			for(uint8_t j = charmap_width; j != 0; --j, ++charmap_row) {
-				uint8_t glyph_id = *charmap_row & 0x7f;
+				uint8_t glyph_id = *charmap_row & ~_BV(7);
+
+				uint8_t mask = 0x00;
+				mask -= (*charmap & _BV(7)) != 0;
 
 				const __flash uint8_t* glyph_data = font;
 				glyph_data += glyph_id * 32 + m;
 				
 				for(uint8_t k = 16; k != 0; --k, ++glyph_data)
-					if (!twi_transmit(*glyph_data))
+					if (!twi_transmit(*glyph_data ^ mask))
 						return 0;
 			}
 		}

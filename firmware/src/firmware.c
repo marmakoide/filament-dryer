@@ -40,18 +40,20 @@ enum RotaryEncoderEvent {
 	RotaryEncoderEvent_left  = 0,
 	RotaryEncoderEvent_none  = 1,
 	RotaryEncoderEvent_right = 2
-};
+}; // enum RotaryEncoderEvent
+
 
 volatile uint8_t push_button_state = 0;
 volatile enum RotaryEncoderEvent rotary_encoder_event = RotaryEncoderEvent_none;
 
-volatile uint16_t tick_counter = 0;
-volatile uint8_t target_temperature = 50;
-volatile uint8_t remaining_hours = 1;
+volatile uint16_t tick_counter = 0;        // Clock ticks
+volatile uint8_t target_temperature = 50;  // Temperature to maintain
+volatile uint8_t remaining_hours = 1;      // Remanining drying time
 volatile uint8_t remaining_minutes = 0;
-int16_t temperature = 0;
-uint16_t humidity = 0;
-uint8_t measure_acquired = 0;
+int16_t temperature = 0;                   // Current temperature
+uint16_t humidity = 0;                     // Current humidity
+uint8_t measure_acquired = 0;              // Flag to check if we acquired a measure
+
 
 
 // --- Charmap handling -------------------------------------------------------
@@ -99,11 +101,14 @@ charmap_render() {
 	
 	top_charmap_print(
 		0, 0,
-		" %02uc     %02u:%02u",
+		" %02uc    %02u:%02u ",
 		target_temperature,
 		remaining_hours,
 		remaining_minutes
 	);
+
+	for(uint8_t i = 0; i < 5; ++i)
+		top_charmap[i] |= 0x80;
 	
 	if (measure_acquired) {
 		// Bound the measured temperature and humidity to fit in the display
@@ -273,8 +278,8 @@ main(void) {
 			measure_acquired = 1;
 			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 		}
-		
-		// Update remaining time according to UI events
+
+		// UI logic
 		switch(rotary_encoder_event) {
 			case RotaryEncoderEvent_left:
 				decrease_remaining_time();
