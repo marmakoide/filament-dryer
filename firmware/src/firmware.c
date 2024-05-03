@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
 #include <avrkit/GPIO.h>
 
@@ -66,41 +65,12 @@ charmap_clear() {
 
 
 static void
-top_charmap_print(
-	uint8_t x,
-	uint8_t y,
-	const char* format,
-	...) {
-	char* charmap_ptr = top_charmap;
-	charmap_ptr += top_charmap_width * y + x;
-
-	va_list argp;
-	va_start(argp, format);
-	vsnprintf(charmap_ptr, top_charmap_width - x, format, argp);
-}
-
-
-static void
-bottom_charmap_print(
-	uint8_t x,
-	uint8_t y,
-	const char* format,
-	...) {
-	char* charmap_ptr = bottom_charmap;
-	charmap_ptr += bottom_charmap_width * y + x;
-
-	va_list argp;
-	va_start(argp, format);
-	vsnprintf(charmap_ptr, bottom_charmap_width - x, format, argp);
-}
-
-
-static void
 charmap_render() {
 	charmap_clear();
 	
-	top_charmap_print(
-		0, 0,
+	snprintf(
+		top_charmap,
+		top_charmap_width,
 		" %02uc    %02u:%02u ",
 		target_temperature,
 		remaining_hours,
@@ -125,8 +95,9 @@ charmap_render() {
 			display_humidity = 990;
 
 		// Render the measured temperature and humidity
-		bottom_charmap_print(
-			0, 0,
+		snprintf(
+			bottom_charmap,
+			bottom_charmap_width,
 			"%02uc %02u%%",
 			display_temperature / 10,
 			display_humidity / 10
