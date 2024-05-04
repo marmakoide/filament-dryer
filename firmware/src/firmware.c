@@ -97,7 +97,7 @@ render_display_status_line(struct StringStream* stream) {
 	StringStream_push_char(stream, ' ');	
 	StringStream_push_uint8(stream, display_temperature / 10, 2);
 	StringStream_push_char(stream, 'c');
-	StringStream_push_nchar(stream, ' ', 8);
+	StringStream_push_nchar(stream, 8, ' ');
 	StringStream_push_uint8(stream, display_humidity / 10, 2);
 	StringStream_push_char(stream, '%');
 	StringStream_push_char(stream, ' ');
@@ -110,10 +110,10 @@ render_display_target_temp_line(struct StringStream* stream) {
 	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
 		StringStream_enable_inverse_mode(stream);
 		
-	StringStream_push_nchar(stream, ' ', 3);
+	StringStream_push_nchar(stream, 3, ' ');
 	StringStream_push_uint8(stream, target_temperature, 2);
 	StringStream_push_char(stream, 'c');
-	StringStream_push_nchar(stream, ' ', 2);
+	StringStream_push_nchar(stream, 2, ' ');
 	
 	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
 		StringStream_disable_inverse_mode(stream);
@@ -125,7 +125,7 @@ render_display_remaining_time_line(struct StringStream* stream) {
 	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
 		StringStream_enable_inverse_mode(stream);
 	
-	StringStream_push_nchar(stream, ' ', 2);
+	StringStream_push_nchar(stream, 2, ' ');
 	StringStream_push_uint8(stream, remaining_hours, 2);
 	StringStream_push_char(stream, ':');
 	StringStream_push_uint8(stream, remaining_minutes, 2);

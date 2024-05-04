@@ -39,8 +39,8 @@ StringStream_push_char(struct StringStream* self,
 
 extern void
 StringStream_push_nchar(struct StringStream* self,
-                        char c,
-                        uint8_t count);
+                        uint8_t count,
+                        char c);
 
 extern void
 StringStream_push_uint8(struct StringStream* self,

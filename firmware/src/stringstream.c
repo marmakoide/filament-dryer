@@ -34,8 +34,8 @@ StringStream_push_char(struct StringStream* self,
 
 void
 StringStream_push_nchar(struct StringStream* self,
-                        char c,
-                        uint8_t count) {
+                        uint8_t count,
+                        char c) {
     char masked_c = c | self->mask;
 
 	for( ; count != 0; --count) {
