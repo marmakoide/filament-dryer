@@ -55,6 +55,13 @@ ssd1306_upload_end();
 
 
 /*
+ * Render an empty horizontal row 8 pixel high
+ */
+uint8_t
+ssd1306_upload_empty_row(int8_t row_count);
+
+
+/*
  * Send a full framebuffer stored in flash memory
  */
 extern uint8_t

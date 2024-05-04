@@ -291,6 +291,17 @@ ssd1306_upload_end() {
 
 
 uint8_t
+ssd1306_upload_empty_row(int8_t row_count) {
+	for( ; row_count != 0; --row_count)
+		for(uint8_t i = SSD1306_framebuffer_width; i != 0; --i)
+			if (!twi_transmit(0x00))
+				return 0;
+	
+	return 1;
+}
+
+
+uint8_t
 ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
                            const char* charmap,
                            uint8_t charmap_height) {

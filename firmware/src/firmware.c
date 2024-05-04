@@ -27,9 +27,9 @@ font16x16_data[];
 // --- RAM data ---------------------------------------------------------------
 
 // Display data
-static char top_charmap[32]; // 2 lines of 16 chars
+static char top_charmap[16]; // 1 lines of 16 chars
 const static uint8_t top_charmap_width = 16;
-const static uint8_t top_charmap_height = 2;
+const static uint8_t top_charmap_height = 1;
 
 static char bottom_charmap[24]; // 3 lines of 8 chars
 const static uint8_t bottom_charmap_width = 8;
@@ -304,7 +304,8 @@ main(void) {
 		// Refresh the display
 		charmap_render();
 		ssd1306_upload_start();
-		ssd1306_upload_charmap_8x8(font8x8_data, top_charmap, top_charmap_height);	
+		ssd1306_upload_charmap_8x8(font8x8_data, top_charmap, top_charmap_height);
+		ssd1306_upload_empty_row(1);
 		ssd1306_upload_charmap_16x16(font16x16_data, bottom_charmap, bottom_charmap_height);	
 		ssd1306_upload_end();
 
