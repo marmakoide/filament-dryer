@@ -36,7 +36,7 @@ const static uint8_t bottom_charmap_width = 8;
 const static uint8_t bottom_charmap_height = 3;
 
 
-// Clock ticks
+// Clock ticks (at 50Hz, would wrap around after about 21 minutes)
 volatile uint16_t tick_counter = 0;
 
 
@@ -46,16 +46,26 @@ volatile uint8_t push_button_state = 0;
 
 // Rotary encoder
 enum RotaryEncoderEvent {
-	RotaryEncoderEvent_left  = 0,
-	RotaryEncoderEvent_none  = 1,
-	RotaryEncoderEvent_right = 2
+	RotaryEncoderEvent__left  = 0,
+	RotaryEncoderEvent__none  = 1,
+	RotaryEncoderEvent__right = 2
 }; // enum RotaryEncoderEvent
 
-volatile enum RotaryEncoderEvent rotary_encoder_event = RotaryEncoderEvent_none;
+volatile enum RotaryEncoderEvent rotary_encoder_event = RotaryEncoderEvent__none;
+
+
+// User interface status
+enum UserInterfaceStatus {
+	UserInterfaceStatus__default = 0,
+	UserInterfaceStatus__target_temperature_selected = 1,
+	UserInterfaceStatus__remaining_time_selected = 2
+}; // enum UserInterfaceStatus
+
+enum UserInterfaceStatus user_interface_status = UserInterfaceStatus__remaining_time_selected;
 
 
 // Remaining time
-uint8_t remaining_hours = 1; // Remanining drying time
+uint8_t remaining_hours = 0; // Remanining drying time
 uint8_t remaining_minutes = 0;
 
 
@@ -80,22 +90,32 @@ charmap_clear() {
 
 static void
 charmap_render() {
-	charmap_clear();
-
 	struct StringStream stream;
+
+	charmap_clear();
 	
 	StringStream_init(&stream, top_charmap);
-	StringStream_enable_inverse_mode(&stream);	
+	
+	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
+		StringStream_enable_inverse_mode(&stream);
 	StringStream_push_char(&stream, ' ');
 	StringStream_push_uint8(&stream, target_temperature, 2);
 	StringStream_push_char(&stream, 'c');
 	StringStream_push_char(&stream, ' ');
-	StringStream_disable_inverse_mode(&stream);	
+	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
+		StringStream_disable_inverse_mode(&stream);
 
-	StringStream_push_nchar(&stream, ' ', 3);
+	StringStream_push_nchar(&stream, ' ', 2);
+
+	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
+		StringStream_enable_inverse_mode(&stream);
+	StringStream_push_char(&stream, ' ');
 	StringStream_push_uint8(&stream, remaining_hours, 2);
 	StringStream_push_char(&stream, ':');
 	StringStream_push_uint8(&stream, remaining_minutes, 2);
+	StringStream_push_char(&stream, ' ');
+	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
+		StringStream_disable_inverse_mode(&stream);
 	
 	if (measure_acquired) {
 		// Bound the measured temperature and humidity to fit in the display
@@ -162,12 +182,12 @@ update_rotary_encoder_event() {
 
 	if (a) {
 		if (b)
-			rotary_encoder_event = RotaryEncoderEvent_left;
+			rotary_encoder_event = RotaryEncoderEvent__left;
 		else
-			rotary_encoder_event = RotaryEncoderEvent_right;
+			rotary_encoder_event = RotaryEncoderEvent__right;
 	}
 	else
-		rotary_encoder_event = RotaryEncoderEvent_none;
+		rotary_encoder_event = RotaryEncoderEvent__none;
 }
 
 
@@ -268,18 +288,18 @@ main(void) {
 
 		// UI logic
 		switch(rotary_encoder_event) {
-			case RotaryEncoderEvent_left:
+			case RotaryEncoderEvent__left:
 				decrease_remaining_time();
 				break;
 			
-			case RotaryEncoderEvent_right:
+			case RotaryEncoderEvent__right:
 				increase_remaining_time();
 				break;
 				
 			default:
 				break;
 		}
-		rotary_encoder_event = RotaryEncoderEvent_none;
+		rotary_encoder_event = RotaryEncoderEvent__none;
 		
 		// Refresh the display
 		charmap_render();
