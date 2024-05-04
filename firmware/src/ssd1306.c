@@ -164,7 +164,7 @@ SSD1306_128x64_init_sequence[] = {
 
 
 static uint8_t
-ssd1306_send_command(uint8_t command, const uint8_t* data, uint16_t data_size) {
+ssd1306_send_command(uint8_t command, const uint8_t* data, uint8_t data_size) {
 	// Send START
 	if (!twi_start())
 		return 0;
@@ -295,7 +295,7 @@ ssd1306_upload_charmap_8x8(const __flash uint8_t* font,
                            const char* charmap,
                            uint8_t charmap_height) {
 	// Send the bitmap data
-	static const uint8_t charmap_width = SSD1306_framebuffer_width / 8;	
+	static const uint8_t charmap_width = SSD1306_framebuffer_width / 8;
 	
 	for(uint8_t i = charmap_height; i != 0; --i) {
 		for(uint8_t j = charmap_width; j != 0; --j, ++charmap) {
