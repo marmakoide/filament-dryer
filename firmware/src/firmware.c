@@ -27,13 +27,9 @@ font16x16_data[];
 // --- RAM data ---------------------------------------------------------------
 
 // Display data
-static char top_charmap[16]; // 1 lines of 16 chars
-const static uint8_t top_charmap_width = 16;
-const static uint8_t top_charmap_height = 1;
-
-static char bottom_charmap[24]; // 3 lines of 8 chars
-const static uint8_t bottom_charmap_width = 8;
-const static uint8_t bottom_charmap_height = 3;
+static char display_status_line[16];
+static char display_target_temp_line[8];
+static char display_remaining_time_line[8];
 
 
 // Clock ticks (at 50Hz, would wrap around after about 21 minutes)
@@ -61,7 +57,7 @@ enum UserInterfaceStatus {
 	UserInterfaceStatus__remaining_time_selected = 2
 }; // enum UserInterfaceStatus
 
-enum UserInterfaceStatus user_interface_status = UserInterfaceStatus__remaining_time_selected;
+enum UserInterfaceStatus user_interface_status = UserInterfaceStatus__default;
 
 
 // Remaining time
@@ -79,66 +75,87 @@ uint16_t humidity = 0;        // Current humidity
 uint8_t measure_acquired = 0; // Flag to check if we acquired a measure
 
 
-// --- Charmap handling -------------------------------------------------------
+// --- Display rendering ------------------------------------------------------
 
 static void
-charmap_clear() {
-	memset(top_charmap, 0, sizeof(top_charmap));
-	memset(bottom_charmap, 0, sizeof(bottom_charmap));	
+render_display_status_line(struct StringStream* stream) {
+	// Bound the measured temperature and humidity to fit in the display
+	int16_t display_temperature = temperature;
+	uint16_t display_humidity = humidity;
+	
+	if (display_temperature < 0)
+		display_temperature = 0;
+
+	if (display_temperature > 990)
+		display_temperature = 990;
+
+	if (display_humidity > 990)
+		display_humidity = 990;	
+
+	// Render the measured temperature and humidity
+	StringStream_enable_inverse_mode(stream);
+	StringStream_push_char(stream, ' ');	
+	StringStream_push_uint8(stream, display_temperature / 10, 2);
+	StringStream_push_char(stream, 'c');
+	StringStream_push_nchar(stream, ' ', 8);
+	StringStream_push_uint8(stream, display_humidity / 10, 2);
+	StringStream_push_char(stream, '%');
+	StringStream_push_char(stream, ' ');
+	StringStream_disable_inverse_mode(stream);	
 }
 
 
 static void
-charmap_render() {
+render_display_target_temp_line(struct StringStream* stream) {
+	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
+		StringStream_enable_inverse_mode(stream);
+		
+	StringStream_push_nchar(stream, ' ', 3);
+	StringStream_push_uint8(stream, target_temperature, 2);
+	StringStream_push_char(stream, 'c');
+	StringStream_push_nchar(stream, ' ', 2);
+	
+	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
+		StringStream_disable_inverse_mode(stream);
+}
+
+
+static void
+render_display_remaining_time_line(struct StringStream* stream) {
+	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
+		StringStream_enable_inverse_mode(stream);
+	
+	StringStream_push_nchar(stream, ' ', 2);
+	StringStream_push_uint8(stream, remaining_hours, 2);
+	StringStream_push_char(stream, ':');
+	StringStream_push_uint8(stream, remaining_minutes, 2);
+	StringStream_push_char(stream, ' ');
+	
+	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
+		StringStream_disable_inverse_mode(stream);
+}
+
+
+static void
+render_display() {
 	struct StringStream stream;
 
-	charmap_clear();
-	
-	StringStream_init(&stream, top_charmap);
-	
-	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
-		StringStream_enable_inverse_mode(&stream);
-	StringStream_push_char(&stream, ' ');
-	StringStream_push_uint8(&stream, target_temperature, 2);
-	StringStream_push_char(&stream, 'c');
-	StringStream_push_char(&stream, ' ');
-	if (user_interface_status == UserInterfaceStatus__target_temperature_selected)
-		StringStream_disable_inverse_mode(&stream);
-
-	StringStream_push_nchar(&stream, ' ', 2);
-
-	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
-		StringStream_enable_inverse_mode(&stream);
-	StringStream_push_char(&stream, ' ');
-	StringStream_push_uint8(&stream, remaining_hours, 2);
-	StringStream_push_char(&stream, ':');
-	StringStream_push_uint8(&stream, remaining_minutes, 2);
-	StringStream_push_char(&stream, ' ');
-	if (user_interface_status == UserInterfaceStatus__remaining_time_selected)
-		StringStream_disable_inverse_mode(&stream);
-	
+	// Render the display status line
+	memset(display_status_line, 0, sizeof(display_status_line));
 	if (measure_acquired) {
-		// Bound the measured temperature and humidity to fit in the display
-		int16_t display_temperature = temperature;
-		uint16_t display_humidity = humidity;
-		
-		if (display_temperature < 0)
-			display_temperature = 0;
-
-		if (display_temperature > 990)
-			display_temperature = 990;
-
-		if (display_humidity > 990)
-			display_humidity = 990;
-
-		// Render the measured temperature and humidity
-		StringStream_init(&stream, bottom_charmap);
-		StringStream_push_uint8(&stream, display_temperature / 10, 2);
-		StringStream_push_char(&stream, 'c');
-		StringStream_push_char(&stream, ' ');
-		StringStream_push_uint8(&stream, display_humidity / 10, 2);
-		StringStream_push_char(&stream, '%');
+		StringStream_init(&stream, display_status_line);
+		render_display_status_line(&stream);
 	}
+	
+	// Render the target temperature line
+	memset(display_target_temp_line, 0, sizeof(display_target_temp_line));
+	StringStream_init(&stream, display_target_temp_line);
+	render_display_target_temp_line(&stream);
+	
+	// Render the remaining time line
+	memset(display_remaining_time_line, 0, sizeof(display_remaining_time_line));
+	StringStream_init(&stream, display_remaining_time_line);
+	render_display_remaining_time_line(&stream);
 }
 
 
@@ -302,11 +319,15 @@ main(void) {
 		rotary_encoder_event = RotaryEncoderEvent__none;
 		
 		// Refresh the display
-		charmap_render();
+		render_display();
+
 		ssd1306_upload_start();
-		ssd1306_upload_charmap_8x8(font8x8_data, top_charmap, top_charmap_height);
+		ssd1306_upload_charmap_8x8(font8x8_data, display_status_line, 1);
 		ssd1306_upload_empty_row(1);
-		ssd1306_upload_charmap_16x16(font16x16_data, bottom_charmap, bottom_charmap_height);	
+		ssd1306_upload_charmap_16x16(font16x16_data, display_target_temp_line, 1);
+		ssd1306_upload_empty_row(1);
+		ssd1306_upload_charmap_16x16(font16x16_data, display_remaining_time_line, 1);
+		ssd1306_upload_empty_row(1);
 		ssd1306_upload_end();
 
 		// Goes to sleep, awaken every 1/50 secs
