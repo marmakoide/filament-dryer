@@ -29,12 +29,14 @@ $(SRC)/sht3x.o: $(SRC)/sht3x.c $(INCLUDES)/sht3x.h $(INCLUDES)/twi.h
 
 $(SRC)/ssd1306.o: $(SRC)/ssd1306.c $(INCLUDES)/ssd1306.h $(INCLUDES)/twi.h
 
-$(SRC)/firmware.o: $(SRC)/firmware.c $(INCLUDES)/config.h
+$(SRC)/stringstream.o: $(SRC)/stringstream.c $(INCLUDES)/stringstream.h
+
+$(SRC)/firmware.o: $(SRC)/firmware.c $(INCLUDES)/config.h  $(INCLUDES)/stringstream.h $(INCLUDES)/ssd1306.h $(INCLUDES)/sht3x.h
 
 .c.o:
 	avr-gcc -I$(AVRKIT_INCLUDES) -I$(INCLUDES) -Os -DF_CPU=$(F_CPU) -D__AVRKIT_$(MCU)__ -mmcu=$(MCU) -c -o $@ $<
 
-firmware.elf: $(SRC)/firmware.o $(SRC)/sht3x.o $(SRC)/ssd1306.o $(SRC)/twi.o $(SRC)/font-8x8.o $(SRC)/font-16x16.o
+firmware.elf: $(SRC)/firmware.o $(SRC)/stringstream.o $(SRC)/sht3x.o $(SRC)/ssd1306.o $(SRC)/twi.o $(SRC)/font-8x8.o $(SRC)/font-16x16.o
 	avr-gcc -mmcu=$(MCU) $^ -o $@
 
 %.hex: %.elf

@@ -3,7 +3,6 @@
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
 
-#include <stdio.h>
 #include <string.h>
 
 #include <avrkit/GPIO.h>
@@ -12,6 +11,7 @@
 #include "sht3x.h"
 #include "ssd1306.h"
 #include "config.h"
+#include "stringstream.h"
 
 
 // --- Flash data ------------------------------------------------------------
@@ -67,18 +67,21 @@ charmap_clear() {
 static void
 charmap_render() {
 	charmap_clear();
-	
-	snprintf(
-		top_charmap,
-		top_charmap_width,
-		" %02uc    %02u:%02u ",
-		target_temperature,
-		remaining_hours,
-		remaining_minutes
-	);
 
-	for(uint8_t i = 0; i < 5; ++i)
-		top_charmap[i] |= 0x80;
+	struct StringStream stream;
+	
+	StringStream_init(&stream, top_charmap);
+	StringStream_enable_inverse_mode(&stream);	
+	StringStream_push_char(&stream, ' ');
+	StringStream_push_uint8(&stream, target_temperature, 2);
+	StringStream_push_char(&stream, 'c');
+	StringStream_push_char(&stream, ' ');
+	StringStream_disable_inverse_mode(&stream);	
+
+	StringStream_push_nchar(&stream, ' ', 3);
+	StringStream_push_uint8(&stream, remaining_hours, 2);
+	StringStream_push_char(&stream, ':');
+	StringStream_push_uint8(&stream, remaining_minutes, 2);
 	
 	if (measure_acquired) {
 		// Bound the measured temperature and humidity to fit in the display
@@ -95,13 +98,12 @@ charmap_render() {
 			display_humidity = 990;
 
 		// Render the measured temperature and humidity
-		snprintf(
-			bottom_charmap,
-			bottom_charmap_width,
-			"%02uc %02u%%",
-			display_temperature / 10,
-			display_humidity / 10
-		);
+		StringStream_init(&stream, bottom_charmap);
+		StringStream_push_uint8(&stream, display_temperature / 10, 2);
+		StringStream_push_char(&stream, 'c');
+		StringStream_push_char(&stream, ' ');
+		StringStream_push_uint8(&stream, display_humidity / 10, 2);
+		StringStream_push_char(&stream, '%');
 	}
 }
 
