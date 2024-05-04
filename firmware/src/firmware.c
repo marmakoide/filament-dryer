@@ -26,6 +26,7 @@ font16x16_data[];
 
 // --- RAM data ---------------------------------------------------------------
 
+// Display data
 static char top_charmap[32]; // 2 lines of 16 chars
 const static uint8_t top_charmap_width = 16;
 const static uint8_t top_charmap_height = 2;
@@ -35,24 +36,37 @@ const static uint8_t bottom_charmap_width = 8;
 const static uint8_t bottom_charmap_height = 3;
 
 
+// Clock ticks
+volatile uint16_t tick_counter = 0;
+
+
+// Push button
+volatile uint8_t push_button_state = 0;
+
+
+// Rotary encoder
 enum RotaryEncoderEvent {
 	RotaryEncoderEvent_left  = 0,
 	RotaryEncoderEvent_none  = 1,
 	RotaryEncoderEvent_right = 2
 }; // enum RotaryEncoderEvent
 
-
-volatile uint8_t push_button_state = 0;
 volatile enum RotaryEncoderEvent rotary_encoder_event = RotaryEncoderEvent_none;
 
-volatile uint16_t tick_counter = 0;        // Clock ticks
-volatile uint8_t target_temperature = 50;  // Temperature to maintain
-volatile uint8_t remaining_hours = 1;      // Remanining drying time
-volatile uint8_t remaining_minutes = 0;
-int16_t temperature = 0;                   // Current temperature
-uint16_t humidity = 0;                     // Current humidity
-uint8_t measure_acquired = 0;              // Flag to check if we acquired a measure
 
+// Remaining time
+uint8_t remaining_hours = 1; // Remanining drying time
+uint8_t remaining_minutes = 0;
+
+
+// Target temperature
+uint8_t target_temperature = 50; // Temperature to maintain
+
+
+// Temperature and humidity measures
+int16_t temperature = 0;      // Current temperature
+uint16_t humidity = 0;        // Current humidity
+uint8_t measure_acquired = 0; // Flag to check if we acquired a measure
 
 
 // --- Charmap handling -------------------------------------------------------
