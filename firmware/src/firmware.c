@@ -3,8 +3,6 @@
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
 
-#include <string.h>
-
 #include <avrkit/GPIO.h>
 
 #include "twi.h"
@@ -141,19 +139,16 @@ render_display() {
 	struct StringStream stream;
 
 	// Render the display status line
-	memset(display_status_line, 0, sizeof(display_status_line));
 	if (measure_acquired) {
 		StringStream_init(&stream, display_status_line);
 		render_display_status_line(&stream);
 	}
 	
 	// Render the target temperature line
-	memset(display_target_temp_line, 0, sizeof(display_target_temp_line));
 	StringStream_init(&stream, display_target_temp_line);
 	render_display_target_temp_line(&stream);
 	
 	// Render the remaining time line
-	memset(display_remaining_time_line, 0, sizeof(display_remaining_time_line));
 	StringStream_init(&stream, display_remaining_time_line);
 	render_display_remaining_time_line(&stream);
 }
