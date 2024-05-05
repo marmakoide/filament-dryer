@@ -265,8 +265,36 @@ setup() {
 // --- Main entry point -------------------------------------------------------
 
 static void
-increase_remaining_time() {
-	if (remaining_hours >= 48)
+increase_target_temperature() {
+	if (target_temperature < 99)
+		target_temperature += 1;
+}
+
+
+static void
+decrease_target_temperature() {
+	if (target_temperature > 0)
+		target_temperature -= 1;
+}
+
+
+static void
+increase_remaining_hours() {
+	if (remaining_hours < MAX_RUNNING_TIME_HOURS)
+		remaining_hours += 1;
+}
+
+
+static void
+decrease_remaining_hours() {
+	if (remaining_hours > 0)
+		remaining_hours -= 1;
+}
+
+
+static void
+increase_remaining_minutes() {
+	if (remaining_hours >= MAX_RUNNING_TIME_HOURS)
 		return;
 
 	remaining_minutes += 1;
@@ -278,7 +306,7 @@ increase_remaining_time() {
 
 
 static void
-decrease_remaining_time() {
+decrease_remaining_minutes() {
 	if ((remaining_hours == 0) && (remaining_minutes == 0))
 		return;
 
@@ -308,24 +336,9 @@ main(void) {
 			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 		}
 		
-		// UI logic
-		switch(rotary_encoder_event) {
-			case RotaryEncoderEvent__left:
-				decrease_remaining_time();
-				break;
-			
-			case RotaryEncoderEvent__right:
-				increase_remaining_time();
-				break;
-				
-			default:
-				break;
-		}
-		rotary_encoder_event = RotaryEncoderEvent__none;
-
+		// Handle button press 
 		uint8_t press = push_button_press;
 		switch(push_button_event) {
-		
 			case PushButtonEvent__none:
 				if (press)
 					push_button_event = PushButtonEvent__maybe_pressed;
@@ -375,6 +388,43 @@ main(void) {
 			
 			push_button_event == PushButtonEvent__none;
 		}
+
+		// Handle rotary encoder event
+		switch(rotary_encoder_event) {
+			case RotaryEncoderEvent__left:
+				switch(user_interface_status) {
+					case UserInterfaceStatus__target_temperature_selected:
+						decrease_target_temperature();
+						break;
+				
+					case UserInterfaceStatus__remaining_time_selected:
+						decrease_remaining_hours();
+						break;
+
+					default:
+						break;
+				}
+				break;
+			
+			case RotaryEncoderEvent__right:
+				switch(user_interface_status) {
+					case UserInterfaceStatus__target_temperature_selected:
+						increase_target_temperature();
+						break;
+				
+					case UserInterfaceStatus__remaining_time_selected:
+						increase_remaining_hours();
+						break;
+
+					default:
+						break;
+				}				
+				break;
+				
+			default:
+				break;
+		}
+		rotary_encoder_event = RotaryEncoderEvent__none;
 		
 		// Refresh the display
 		render_display();
