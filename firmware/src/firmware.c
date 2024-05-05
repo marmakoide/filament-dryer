@@ -105,7 +105,6 @@ render_display_status_line(struct StringStream* stream) {
 	StringStream_push_uint8(stream, display_temperature / 10, 2);
 	StringStream_push_char(stream, 'c');
 
-	
 	StringStream_push_nchar(stream, 8, ' ');
 	
 	StringStream_push_uint8(stream, display_humidity / 10, 2);
@@ -328,9 +327,14 @@ main(void) {
 	
 	// Main loop
 	while(1) {
+		// Update remaining time
+		if (tick_counter % 50 == 0) {
+			if (user_interface_status == UserInterfaceStatus__default)
+				decrease_remaining_minutes();
+		}
+		
 		// Request a temperature and humidity every 50 ticks
-		if (tick_counter >= 50) {
-			tick_counter -= 50;
+		if (tick_counter % 50 == 0) {
 			sht3x_acquire_measure(&temperature, &humidity);
 			measure_acquired = 1;
 			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);

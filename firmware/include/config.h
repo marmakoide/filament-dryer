@@ -14,7 +14,6 @@
 // Max running time allowed in hours
 #define MAX_RUNNING_TIME_HOURS 96
 
-
 // Clock frequency for I2C protocol
 //#define F_SCL 100000UL
 #define F_SCL 400000UL 
