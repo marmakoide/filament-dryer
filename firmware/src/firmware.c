@@ -35,7 +35,16 @@ volatile uint16_t tick_counter = 0;
 
 
 // Push button
-volatile uint8_t push_button_state = 0;
+enum PushButtonEvent {
+	PushButtonEvent__none = 0,
+	PushButtonEvent__maybe_pressed = 1,
+	PushButtonEvent__pressed = 2,
+	PushButtonEvent__maybe_released = 3,
+	PushButtonEvent__released = 4
+}; // enum PushButtonEvent
+
+volatile uint8_t push_button_press = 0;
+enum PushButtonEvent push_button_event = PushButtonEvent__none;
 
 
 // Rotary encoder
@@ -95,7 +104,10 @@ render_display_status_line(struct StringStream* stream) {
 	StringStream_push_char(stream, ' ');	
 	StringStream_push_uint8(stream, display_temperature / 10, 2);
 	StringStream_push_char(stream, 'c');
+
+	
 	StringStream_push_nchar(stream, 8, ' ');
+	
 	StringStream_push_uint8(stream, display_humidity / 10, 2);
 	StringStream_push_char(stream, '%');
 	StringStream_push_char(stream, ' ');
@@ -164,12 +176,10 @@ setup_push_button() { \
 	gpio_pin_##PIN##__enable_change_interrupt(); \
 } \
 \
-\
-static void \
-update_push_button_state() { \
-	push_button_state = !gpio_pin_##PIN##__is_high(); \
+static uint8_t \
+update_push_button_pressed() { \
+	push_button_press = !gpio_pin_##PIN##__is_high(); \
 }
-
 
 INSTANCIATE_PUSH_BUTTON_SETUP(B0)
 
@@ -210,7 +220,7 @@ ISR(PCINT2_vect) {
 }
 
 ISR(PCINT0_vect) {
-	update_push_button_state();
+	update_push_button_pressed();
 
 }
 
@@ -297,7 +307,7 @@ main(void) {
 			measure_acquired = 1;
 			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 		}
-
+		
 		// UI logic
 		switch(rotary_encoder_event) {
 			case RotaryEncoderEvent__left:
@@ -312,6 +322,59 @@ main(void) {
 				break;
 		}
 		rotary_encoder_event = RotaryEncoderEvent__none;
+
+		uint8_t press = push_button_press;
+		switch(push_button_event) {
+		
+			case PushButtonEvent__none:
+				if (press)
+					push_button_event = PushButtonEvent__maybe_pressed;
+				break;
+			
+			case PushButtonEvent__maybe_pressed:
+				if (press)
+					push_button_event = PushButtonEvent__pressed;
+				else
+					push_button_event = PushButtonEvent__none;
+				break;
+			
+			case PushButtonEvent__pressed:
+				if (!press)
+					push_button_event = PushButtonEvent__maybe_released;
+				break;
+
+			case PushButtonEvent__maybe_released:
+				if (!press)
+					push_button_event = PushButtonEvent__released;
+				else
+					push_button_event = PushButtonEvent__pressed;
+				break;
+			
+			case PushButtonEvent__released:
+				if (!press)
+					push_button_event = PushButtonEvent__none;
+				else
+					push_button_event = PushButtonEvent__maybe_pressed;
+				break;
+		}
+		
+		if (push_button_event == PushButtonEvent__released) {
+			switch(user_interface_status) {
+				case UserInterfaceStatus__default:
+					user_interface_status = UserInterfaceStatus__target_temperature_selected;
+					break;
+
+				case UserInterfaceStatus__target_temperature_selected:
+					user_interface_status = UserInterfaceStatus__remaining_time_selected;
+					break;
+
+				case UserInterfaceStatus__remaining_time_selected:
+					user_interface_status = UserInterfaceStatus__default;
+					break;
+			}
+			
+			push_button_event == PushButtonEvent__none;
+		}
 		
 		// Refresh the display
 		render_display();
