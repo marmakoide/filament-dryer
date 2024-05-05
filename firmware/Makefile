@@ -22,15 +22,9 @@ $(BUILD)/font-8x8.o: $(BUILD)/font-8x8.c
 
 $(BUILD)/font-16x16.o: $(BUILD)/font-16x16.c
 
-$(BUILD)/twi.o: $(SRC)/twi.c $(INCLUDES)/twi.h
-
-$(BUILD)/sht3x.o: $(SRC)/sht3x.c $(INCLUDES)/sht3x.h $(INCLUDES)/twi.h
-
-$(BUILD)/ssd1306.o: $(SRC)/ssd1306.c $(INCLUDES)/ssd1306.h $(INCLUDES)/twi.h
-
-$(BUILD)/stringstream.o: $(SRC)/stringstream.c $(INCLUDES)/stringstream.h
-
-$(BUILD)/firmware.o: $(SRC)/firmware.c $(INCLUDES)/config.h  $(INCLUDES)/stringstream.h $(INCLUDES)/ssd1306.h $(INCLUDES)/sht3x.h
+$(BUILD_DIR)/%.deps: $(SRC)/%.c
+	@mkdir --parents $(BUILD)
+	$(CC) $(INCLUDES) -MM -MG -MT$(patsubst $(SRC)/%.c, $(BUILD_DIR)/%.o, $^) -MF $@ $^
 
 $(BUILD)/%.o: $(SRC)/%.c
 	@mkdir --parents $(BUILD)
@@ -39,7 +33,6 @@ $(BUILD)/%.o: $(SRC)/%.c
 $(BUILD)/%.o: $(BUILD)/%.c
 	@mkdir --parents $(BUILD)
 	$(CC) -o $@ -c $(CFLAGS) $<
-
 
 firmware.elf: \
 $(BUILD)/firmware.o \
@@ -60,3 +53,5 @@ clean:
 
 upload: $(TARGET)
 	avrdude -F -V -c arduino -p $(MCU) -P $(USB_PORT) -b 115200 -U flash:w:$<
+
+-include $(patsubst $(SRC)/%.c, $(BUILD)/%.deps, $(wildcard $(SRC)/*.c))
