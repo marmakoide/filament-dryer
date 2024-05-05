@@ -422,7 +422,7 @@ main(void) {
 
 					default:
 						break;
-				}				
+				}
 				break;
 				
 			default:

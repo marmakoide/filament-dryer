@@ -8,6 +8,15 @@ SRC=./src
 INCLUDES=./include
 AVRKIT_INCLUDES=$(AVRKIT_PATH)/include
 
+OBJ_LIST=\
+$(SRC)/firmware.o \
+$(SRC)/stringstream.o \
+$(SRC)/sht3x.o \
+$(SRC)/ssd1306.o \
+$(SRC)/twi.o \
+$(SRC)/font-8x8.o \
+$(SRC)/font-16x16.o
+
 
 .PHONY: clean upload
 
@@ -36,7 +45,7 @@ $(SRC)/firmware.o: $(SRC)/firmware.c $(INCLUDES)/config.h  $(INCLUDES)/stringstr
 .c.o:
 	avr-gcc -I$(AVRKIT_INCLUDES) -I$(INCLUDES) -Os -DF_CPU=$(F_CPU) -D__AVRKIT_$(MCU)__ -mmcu=$(MCU) -c -o $@ $<
 
-firmware.elf: $(SRC)/firmware.o $(SRC)/stringstream.o $(SRC)/sht3x.o $(SRC)/ssd1306.o $(SRC)/twi.o $(SRC)/font-8x8.o $(SRC)/font-16x16.o
+firmware.elf: $(OBJ_LIST)
 	avr-gcc -mmcu=$(MCU) $^ -o $@
 
 %.hex: %.elf
