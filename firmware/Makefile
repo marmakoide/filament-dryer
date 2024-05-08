@@ -52,6 +52,6 @@ clean:
 	@rm -f *.elf $(TARGET)
 
 upload: $(TARGET)
-	avrdude -F -V -c arduino -p $(MCU) -P $(USB_PORT) -b 115200 -U flash:w:$<
+	avrdude -F -V -c arduino -p $(MCU) -P $(USB_PORT) -b $(USB_BAUDS) -U flash:w:$<
 
 -include $(patsubst $(SRC)/%.c, $(BUILD)/%.deps, $(wildcard $(SRC)/*.c))
