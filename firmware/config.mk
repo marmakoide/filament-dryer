@@ -1,4 +1,4 @@
-AVRKIT_PATH=/home/alex/Labo/embedded/arduino/avrkit
+AVRKIT_PATH=/home/alex/Labo/embedded/avrkit
 USB_PORT=/dev/ttyUSB0
 
 MCU=atmega328p
