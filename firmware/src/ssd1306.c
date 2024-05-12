@@ -1,6 +1,5 @@
 #include <avr/sfr_defs.h>
 #include "config.h"
-#include "twi.h"
 #include "ssd1306.h"
 
 

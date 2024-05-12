@@ -1,6 +1,9 @@
 #ifndef FILAMENT_DRYER_CONFIG_H
 #define FILAMENT_DRYER_CONFIG_H
 
+#include <avrkit/TWI.h>
+
+
 /*
   Size for the SD1306-driven display
  */
@@ -15,8 +18,8 @@
 #define MAX_RUNNING_TIME_HOURS 96
 
 // Clock frequency for I2C protocol
-//#define F_SCL 100000UL
-#define F_SCL 400000UL 
+//#define TWI_FREQ TWI_FREQ_STANDARD
+#define TWI_FREQ TWI_FREQ_FAST
 
 // I2C identifier for the SSD1306-driven display
 #define SSD1306_I2C_ADDRESS 0x3c

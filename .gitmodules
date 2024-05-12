@@ -1,0 +1,3 @@
+[submodule "firmware/avrkit"]
+	path = firmware/avrkit
+	url = https://github.com/marmakoide/avrkit

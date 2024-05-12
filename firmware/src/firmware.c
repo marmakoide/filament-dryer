@@ -4,8 +4,8 @@
 #include <avr/interrupt.h>
 
 #include <avrkit/GPIO.h>
+#include <avrkit/TWI.h>
 
-#include "twi.h"
 #include "sht3x.h"
 #include "ssd1306.h"
 #include "config.h"
@@ -248,7 +248,8 @@ setup_timer1() {
 
 static void
 setup() {
-	twi_init();
+	twi_pins_setup();
+	twi_set_speed(TWI_FREQ);
 	setup_timer1();
 	setup_push_button();
 	setup_rotary_encoder();

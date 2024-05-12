@@ -39,13 +39,13 @@ $(BUILD)/firmware.o \
 $(BUILD)/stringstream.o \
 $(BUILD)/sht3x.o \
 $(BUILD)/ssd1306.o \
-$(BUILD)/twi.o \
 $(BUILD)/font-8x8.o \
-$(BUILD)/font-16x16.o
-	avr-gcc -mmcu=$(MCU) $^ -o $@
+$(BUILD)/font-16x16.o \
+$(AVRKIT_PATH)/libavrkit.a
+	$(CC) -mmcu=$(MCU) $^ -o $@
 
 %.hex: %.elf
-	avr-objcopy -O ihex -R .eeprom $< $@
+	$(OBJCOPY) -O ihex -R .eeprom $< $@
 
 clean:
 	@rm -rf $(BUILD)
