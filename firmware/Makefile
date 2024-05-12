@@ -37,7 +37,6 @@ $(BUILD)/%.o: $(BUILD)/%.c
 firmware.elf: \
 $(BUILD)/firmware.o \
 $(BUILD)/stringstream.o \
-$(BUILD)/sht3x.o \
 $(BUILD)/ssd1306.o \
 $(BUILD)/font-8x8.o \
 $(BUILD)/font-16x16.o \

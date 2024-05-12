@@ -5,8 +5,8 @@
 
 #include <avrkit/GPIO.h>
 #include <avrkit/TWI.h>
+#include <avrkit/drivers/sht3x.h>
 
-#include "sht3x.h"
 #include "ssd1306.h"
 #include "config.h"
 #include "stringstream.h"
@@ -77,8 +77,7 @@ uint8_t target_temperature = 50; // Temperature to maintain
 
 
 // Temperature and humidity measures
-int16_t temperature = 0;      // Current temperature
-uint16_t humidity = 0;        // Current humidity
+struct sht3x_measure measure = { 0, 0 };
 uint8_t measure_acquired = 0; // Flag to check if we acquired a measure
 
 
@@ -87,8 +86,8 @@ uint8_t measure_acquired = 0; // Flag to check if we acquired a measure
 static void
 render_display_status_line(struct StringStream* stream) {
 	// Bound the measured temperature and humidity to fit in the display
-	int16_t display_temperature = temperature;
-	uint16_t display_humidity = humidity;
+	int16_t display_temperature = measure.temperature;
+	uint16_t display_humidity = measure.humidity;
 	
 	if (display_temperature < 0)
 		display_temperature = 0;
@@ -257,6 +256,9 @@ setup() {
 	// Allow interrupts
 	sei();
 
+	// SHT3x setup
+	sht3x_i2c_address = SHT3X_I2C_ADDRESS;
+	
 	// Display setup
 	ssd1306_init();
 }
@@ -336,7 +338,7 @@ main(void) {
 		
 		// Request a temperature and humidity every 50 ticks
 		if (tick_counter % 50 == 0) {
-			sht3x_acquire_measure(&temperature, &humidity);
+			sht3x_acquire_measure(&measure);
 			measure_acquired = 1;
 			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 		}
