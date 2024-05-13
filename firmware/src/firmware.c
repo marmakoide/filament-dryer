@@ -182,23 +182,23 @@ update_push_button_pressed() { \
 INSTANCIATE_PUSH_BUTTON_SETUP(B0)
 
 
-// pin 7 => clock
 // pin 6 => dt
+// pin 7 => clock
 static void
 setup_rotary_encoder() {
-	gpio_pin_D7__set_as_input();
-	gpio_pin_D7__set_high();
-	gpio_pin_D7__enable_change_interrupt();
-
 	gpio_pin_D6__set_as_input();
 	gpio_pin_D6__set_high();
+	gpio_pin_D6__enable_change_interrupt();
+
+	gpio_pin_D7__set_as_input();
+	gpio_pin_D7__set_high();
 }
 
 
 static void
 update_rotary_encoder_event() {
-	uint8_t a = gpio_pin_D7__is_high();
-	uint8_t b = gpio_pin_D6__is_high();
+	uint8_t a = gpio_pin_D6__is_high();
+	uint8_t b = gpio_pin_D7__is_high();
 
 	if (a) {
 		if (b)
