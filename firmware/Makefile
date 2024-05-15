@@ -12,11 +12,11 @@ AVRKIT_INCLUDES=$(AVRKIT_PATH)/include
 
 all: $(TARGET)
 
-$(BUILD)/font-8x8.c: ./assets/font-8x8.png ./bitmap-tool
-	python3 ./bitmap-tool to-font --font-format=8x8 --array-name=font8x8_data $< > $@
+$(BUILD)/font-8x8.c: ./assets/font-8x8.png
+	python3 $(AVRKIT_PATH)/tools/ssd1306-tool to-font --font-format=8x8 --array-name=font8x8_data $< > $@
 
-$(BUILD)/font-16x16.c: ./assets/font-16x16.png ./bitmap-tool
-	python3 ./bitmap-tool to-font --font-format=16x16 --array-name=font16x16_data $< > $@
+$(BUILD)/font-16x16.c: ./assets/font-16x16.png
+	python3 $(AVRKIT_PATH)/tools/ssd1306-tool to-font --font-format=16x16 --array-name=font16x16_data $< > $@
 
 $(BUILD)/font-8x8.o: $(BUILD)/font-8x8.c
 
@@ -37,7 +37,6 @@ $(BUILD)/%.o: $(BUILD)/%.c
 firmware.elf: \
 $(BUILD)/firmware.o \
 $(BUILD)/stringstream.o \
-$(BUILD)/ssd1306.o \
 $(BUILD)/font-8x8.o \
 $(BUILD)/font-16x16.o \
 $(AVRKIT_PATH)/libavrkit.a

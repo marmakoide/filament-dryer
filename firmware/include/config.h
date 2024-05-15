@@ -3,16 +3,6 @@
 
 #include <avrkit/TWI.h>
 
-/*
-  Size for the SD1306-driven display
- */
-
-#define SSD1306_DISPLAY_SIZE__128x32 0x00
-#define SSD1306_DISPLAY_SIZE__128x64 0x01
-
-#define SSD1306_DISPLAY_SIZE SSD1306_DISPLAY_SIZE__128x64
-
-
 // Max running time allowed in hours
 #define MAX_RUNNING_TIME_HOURS 96
 

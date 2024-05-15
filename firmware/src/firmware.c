@@ -6,8 +6,8 @@
 #include <avrkit/GPIO.h>
 #include <avrkit/TWI.h>
 #include <avrkit/drivers/sht3x.h>
+#include <avrkit/drivers/ssd1306.h>
 
-#include "ssd1306.h"
 #include "config.h"
 #include "stringstream.h"
 
@@ -260,6 +260,8 @@ setup() {
 	sht3x_i2c_address = SHT3X_I2C_ADDRESS;
 	
 	// Display setup
+	ssd1306_i2c_address = SSD1306_I2C_ADDRESS;
+	ssd1306_display_conf = &ssd1306_128x64_display_conf;
 	ssd1306_init();
 }
 
