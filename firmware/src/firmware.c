@@ -338,7 +338,7 @@ main(void) {
 		
 		// Request a temperature and humidity every 50 ticks
 		if (tick_counter % 50 == 0) {
-			sht3x_acquire_measure(&measure);
+			sht3x_read_single_shot_measure(&measure);
 			measure_acquired = 1;
 			sht3x_request_single_shot_measure(sht3x_measure_repeatability_high);
 		}
