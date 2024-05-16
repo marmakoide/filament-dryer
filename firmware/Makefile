@@ -24,7 +24,7 @@ $(BUILD)/font-16x16.o: $(BUILD)/font-16x16.c
 
 $(BUILD)/%.deps: $(SRC)/%.c
 	@mkdir --parents $(BUILD)
-	$(CC) -I$(INCLUDES) -MM -MG -MT$(patsubst $(SRC)/%.c, $(BUILD)/%.o, $^) -MF $@ $^
+	$(CC) -I$(INCLUDES) $(CFLAGS) -MM -MG -MT$(patsubst $(SRC)/%.c, $(BUILD)/%.o, $^) -MF $@ $^
 
 $(BUILD)/%.o: $(SRC)/%.c
 	@mkdir --parents $(BUILD)

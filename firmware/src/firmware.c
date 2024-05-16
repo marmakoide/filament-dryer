@@ -166,60 +166,47 @@ render_display() {
 
 // --- Rotary encoder switch handling -----------------------------------------
 
-#define INSTANCIATE_PUSH_BUTTON_SETUP(PIN) \
-static void \
-setup_push_button() { \
-	gpio_pin_##PIN##__set_as_input(); \
-	gpio_pin_##PIN##__set_high(); \
-	gpio_pin_##PIN##__enable_change_interrupt(); \
-} \
-\
-static uint8_t \
-update_push_button_pressed() { \
-	push_button_press = !gpio_pin_##PIN##__is_high(); \
-}
-
-INSTANCIATE_PUSH_BUTTON_SETUP(B0)
-
-
-// pin 6 => dt
-// pin 7 => clock
 static void
 setup_rotary_encoder() {
-	gpio_pin_D6__set_as_input();
-	gpio_pin_D6__set_high();
-	gpio_pin_D6__enable_change_interrupt();
+	gpio_pin_B0__set_as_input();
+	gpio_pin_B0__set_high();
+	gpio_pin_B0__enable_change_interrupt();
 
-	gpio_pin_D7__set_as_input();
-	gpio_pin_D7__set_high();
+	gpio_pin_B1__set_as_input();
+	gpio_pin_B1__set_high();
+
+	gpio_pin_B2__set_as_input();
+	gpio_pin_B2__set_high();
+	gpio_pin_B2__enable_change_interrupt();
 }
 
 
 static void
 update_rotary_encoder_event() {
-	uint8_t a = gpio_pin_D6__is_high();
-	uint8_t b = gpio_pin_D7__is_high();
+	uint8_t a = gpio_pin_B0__is_high();
+	uint8_t b = gpio_pin_B1__is_high();
+	uint8_t c = !gpio_pin_B2__is_high();
 
-	if (a) {
-		if (b)
-			rotary_encoder_event = RotaryEncoderEvent__left;
+	if (c)
+		push_button_press = 1;
+	else {
+		push_button_press = 0;
+		if (a) {
+			if (b)
+				rotary_encoder_event = RotaryEncoderEvent__left;
+			else
+				rotary_encoder_event = RotaryEncoderEvent__right;
+		}
 		else
-			rotary_encoder_event = RotaryEncoderEvent__right;
+			rotary_encoder_event = RotaryEncoderEvent__none;
 	}
-	else
-		rotary_encoder_event = RotaryEncoderEvent__none;
 }
 
 
 // --- Interrupt handlers -----------------------------------------------------
 
-ISR(PCINT2_vect) {
-	update_rotary_encoder_event();
-}
-
 ISR(PCINT0_vect) {
-	update_push_button_pressed();
-
+	update_rotary_encoder_event();
 }
 
 ISR(TIMER1_COMPA_vect) {
@@ -250,7 +237,6 @@ setup() {
 	twi_pins_setup();
 	twi_set_speed(TWI_FREQ);
 	setup_timer1();
-	setup_push_button();
 	setup_rotary_encoder();
 	
 	// Allow interrupts
