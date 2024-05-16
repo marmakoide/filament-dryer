@@ -22,9 +22,9 @@ $(BUILD)/font-8x8.o: $(BUILD)/font-8x8.c
 
 $(BUILD)/font-16x16.o: $(BUILD)/font-16x16.c
 
-$(BUILD_DIR)/%.deps: $(SRC)/%.c
+$(BUILD)/%.deps: $(SRC)/%.c
 	@mkdir --parents $(BUILD)
-	$(CC) $(INCLUDES) -MM -MG -MT$(patsubst $(SRC)/%.c, $(BUILD_DIR)/%.o, $^) -MF $@ $^
+	$(CC) -I$(INCLUDES) -MM -MG -MT$(patsubst $(SRC)/%.c, $(BUILD)/%.o, $^) -MF $@ $^
 
 $(BUILD)/%.o: $(SRC)/%.c
 	@mkdir --parents $(BUILD)
